@@ -19,6 +19,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -70,6 +71,15 @@ public class ActionService {
         // Update case
         if (newState != null) hc.setCurrentWorkflowState(newState);
         if (newStage != null) hc.setCurrentStage(newStage);
+
+        // Clear SLA breach flag when the breaching condition is resolved
+        if (hc.getSlaBreachFlag() && newState != null
+                && !List.of("PA_PENDING", "PA_SUBMITTED").contains(newState)) {
+            hc.setSlaBreachFlag(false);
+            hc.setEscalationFlag(false);
+            hc.setEscalationReason(null);
+        }
+
         caseRepo.save(hc);
 
         // Update workflow state
