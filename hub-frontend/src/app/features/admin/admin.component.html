@@ -61,50 +61,46 @@
     } @else {
       <div class="config-body">
         <div class="config-section">Enrollment</div>
-        <div class="config-field"><label>Accepted sources</label>
-          <div class="source-chips">
-            @for (s of config().acceptedSources || []; track s) {
-              <span class="source-chip">{{ s }}</span>
-            }
-          </div>
+        <div class="config-field"><label>Consent method</label>
+          <select class="config-select" [(ngModel)]="config().consentMethod">
+            <option value="SMS">SMS</option><option value="PHONE">Phone</option><option value="PORTAL">Portal</option>
+          </select>
         </div>
-        <div class="config-field"><label>Consent method</label><span>{{ config().consentMethod }}</span></div>
-        <div class="config-field"><label>MI SLA (business days)</label><span>{{ config().miSlaBusinessDays }}</span></div>
+        <div class="config-field"><label>MI SLA (business days)</label><input type="number" [(ngModel)]="config().miSlaBusinessDays"></div>
 
         <div class="config-section">Workflow</div>
-        <label class="toggle-row"><span>Prior auth required</span><span class="bool-val" [class.yes]="config().priorAuthRequired" [class.no]="!config().priorAuthRequired">{{ config().priorAuthRequired ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>eBV enabled</span><span class="bool-val" [class.yes]="config().ebvEnabled" [class.no]="!config().ebvEnabled">{{ config().ebvEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>eIV enabled</span><span class="bool-val" [class.yes]="config().eivEnabled" [class.no]="!config().eivEnabled">{{ config().eivEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Copay assistance</span><span class="bool-val" [class.yes]="config().copayAssistanceEnabled" [class.no]="!config().copayAssistanceEnabled">{{ config().copayAssistanceEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>PAP enabled</span><span class="bool-val" [class.yes]="config().papEnabled" [class.no]="!config().papEnabled">{{ config().papEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Bridge supply</span><span class="bool-val" [class.yes]="config().bridgeSupplyEnabled" [class.no]="!config().bridgeSupplyEnabled">{{ config().bridgeSupplyEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Quick Start</span><span class="bool-val" [class.yes]="config().quickStartEnabled" [class.no]="!config().quickStartEnabled">{{ config().quickStartEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>REMS tracking</span><span class="bool-val" [class.yes]="config().remsTrackingEnabled" [class.no]="!config().remsTrackingEnabled">{{ config().remsTrackingEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Adherence program</span><span class="bool-val" [class.yes]="config().adherenceProgramEnabled" [class.no]="!config().adherenceProgramEnabled">{{ config().adherenceProgramEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Nurse education</span><span class="bool-val" [class.yes]="config().nurseEducationEnabled" [class.no]="!config().nurseEducationEnabled">{{ config().nurseEducationEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Welcome kit</span><span class="bool-val" [class.yes]="config().welcomeKitEnabled" [class.no]="!config().welcomeKitEnabled">{{ config().welcomeKitEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Travel assistance</span><span class="bool-val" [class.yes]="config().travelAssistanceEnabled" [class.no]="!config().travelAssistanceEnabled">{{ config().travelAssistanceEnabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Infusion site</span><span class="bool-val" [class.yes]="config().infusionSiteEnabled" [class.no]="!config().infusionSiteEnabled">{{ config().infusionSiteEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Prior auth required</span><input type="checkbox" [(ngModel)]="config().priorAuthRequired"></label>
+        <label class="toggle-row"><span>eBV enabled</span><input type="checkbox" [(ngModel)]="config().ebvEnabled"></label>
+        <label class="toggle-row"><span>eIV enabled</span><input type="checkbox" [(ngModel)]="config().eivEnabled"></label>
+        <label class="toggle-row"><span>Copay assistance</span><input type="checkbox" [(ngModel)]="config().copayAssistanceEnabled"></label>
+        <label class="toggle-row"><span>PAP enabled</span><input type="checkbox" [(ngModel)]="config().papEnabled"></label>
+        <label class="toggle-row"><span>Bridge supply</span><input type="checkbox" [(ngModel)]="config().bridgeSupplyEnabled"></label>
+        <label class="toggle-row"><span>Quick Start</span><input type="checkbox" [(ngModel)]="config().quickStartEnabled"></label>
+        <label class="toggle-row"><span>REMS tracking</span><input type="checkbox" [(ngModel)]="config().remsTrackingEnabled"></label>
+        <label class="toggle-row"><span>Adherence program</span><input type="checkbox" [(ngModel)]="config().adherenceProgramEnabled"></label>
+        <label class="toggle-row"><span>Nurse education</span><input type="checkbox" [(ngModel)]="config().nurseEducationEnabled"></label>
+        <label class="toggle-row"><span>Welcome kit</span><input type="checkbox" [(ngModel)]="config().welcomeKitEnabled"></label>
+        <label class="toggle-row"><span>Travel assistance</span><input type="checkbox" [(ngModel)]="config().travelAssistanceEnabled"></label>
+        <label class="toggle-row"><span>Infusion site</span><input type="checkbox" [(ngModel)]="config().infusionSiteEnabled"></label>
 
         <div class="config-section">Financial</div>
-        <div class="config-field"><label>FPL threshold %</label><span>{{ config().fplThresholdPct }}</span></div>
-        <div class="config-field"><label>PAP approval duration (months)</label><span>{{ config().papApprovalDurationMonths }}</span></div>
-        <div class="config-field"><label>PAP re-enrollment lead (days)</label><span>{{ config().papReenrollmentLeadDays }}</span></div>
-        <div class="config-field"><label>Copay max benefit ($/year)</label><span>{{ config().copayMaxBenefitUsd ?? 'No cap' }}</span></div>
-        <div class="config-field"><label>Bridge max duration (months)</label><span>{{ config().bridgeMaxDurationMonths }}</span></div>
-        <div class="config-field"><label>Quick Start max duration (months)</label><span>{{ config().quickStartMaxDurationMonths }}</span></div>
+        <div class="config-field"><label>FPL threshold %</label><input type="number" [(ngModel)]="config().fplThresholdPct"></div>
+        <div class="config-field"><label>PAP approval (months)</label><input type="number" [(ngModel)]="config().papApprovalDurationMonths"></div>
+        <div class="config-field"><label>PAP re-enroll lead (days)</label><input type="number" [(ngModel)]="config().papReenrollmentLeadDays"></div>
+        <div class="config-field"><label>Copay max benefit ($)</label><input type="number" [(ngModel)]="config().copayMaxBenefitUsd" placeholder="No cap"></div>
+        <div class="config-field"><label>Bridge max (months)</label><input type="number" [(ngModel)]="config().bridgeMaxDurationMonths"></div>
+        <div class="config-field"><label>Quick Start max (months)</label><input type="number" [(ngModel)]="config().quickStartMaxDurationMonths"></div>
 
         <div class="config-section">PA SLA</div>
-        <div class="config-field"><label>Submit SLA (business days)</label><span>{{ config().paSubmitSlaBusinessDays }}</span></div>
-        <div class="config-field"><label>Follow-up SLA (business days)</label><span>{{ config().paFollowupSlaBusinessDays }}</span></div>
-        <div class="config-field"><label>Appeal window (days)</label><span>{{ config().paAppealWindowDays }}</span></div>
-        <div class="config-field"><label>Max appeal levels</label><span>{{ config().paMaxAppealLevels }}</span></div>
-        <label class="toggle-row"><span>Auto-escalate on breach</span><span class="bool-val" [class.yes]="config().paAutoEscalate" [class.no]="!config().paAutoEscalate">{{ config().paAutoEscalate ? '\u2713' : '\u2014' }}</span></label>
+        <div class="config-field"><label>Submit SLA (days)</label><input type="number" [(ngModel)]="config().paSubmitSlaBusinessDays"></div>
+        <div class="config-field"><label>Follow-up SLA (days)</label><input type="number" [(ngModel)]="config().paFollowupSlaBusinessDays"></div>
+        <div class="config-field"><label>Appeal window (days)</label><input type="number" [(ngModel)]="config().paAppealWindowDays"></div>
+        <div class="config-field"><label>Max appeal levels</label><input type="number" [(ngModel)]="config().paMaxAppealLevels"></div>
+        <label class="toggle-row"><span>Auto-escalate on breach</span><input type="checkbox" [(ngModel)]="config().paAutoEscalate"></label>
 
         <div class="config-section">SP &amp; Adherence</div>
-        <div class="config-field"><label>SP follow-up SLA (business days)</label><span>{{ config().spFollowupSlaBusinessDays }}</span></div>
-        <div class="config-field"><label>Check-in intervals (days)</label><span>{{ config().adherenceCheckinIntervalsDays?.join(' / ') }}</span></div>
-        <div class="config-field"><label>Refill reminder lead (days)</label><span>{{ config().refillReminderLeadDays }}</span></div>
+        <div class="config-field"><label>SP follow-up SLA (days)</label><input type="number" [(ngModel)]="config().spFollowupSlaBusinessDays"></div>
+        <div class="config-field"><label>Refill reminder lead (days)</label><input type="number" [(ngModel)]="config().refillReminderLeadDays"></div>
 
         <button class="save-btn" (click)="saveConfig()" [disabled]="saving()">
           {{ saving() ? 'Saving...' : 'Save changes' }}

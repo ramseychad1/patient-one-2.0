@@ -36,6 +36,7 @@
 .config-field { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; }
 .config-field label { color: var(--text-secondary); }
 .config-field input { width: 80px; padding: 4px 8px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 13px; text-align: right; }
+.config-select { padding: 4px 8px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 13px; font-family: var(--font); }
 .save-btn { width: 100%; padding: 10px; background: var(--teal); border: none; border-radius: var(--radius-md); color: white; font-size: 13px; font-weight: 600; font-family: var(--font); cursor: pointer; margin-top: 16px; }
 .save-btn:hover { background: var(--teal-mid); }
 .save-btn:disabled { opacity: 0.6; cursor: default; }
