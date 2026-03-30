@@ -10,7 +10,9 @@
 .stats-row { display: flex; gap: 12px; margin-top: 16px; }
 .stat-card { flex: 1; background: var(--surface-page); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; cursor: pointer; transition: all 0.12s; }
 .stat-card:hover { border-color: var(--border-strong); background: #fff; }
+.stat-card.selected { border-color: var(--teal); background: var(--teal-light); }
 .stat-card.alert { border-color: rgba(228,31,53,0.3); background: var(--brand-bg); }
+.stat-card.alert.selected { border-color: var(--brand); }
 .stat-label { font-size: 11px; color: var(--text-tertiary); margin-bottom: 4px; }
 .stat-value { font-size: 22px; font-weight: 700; letter-spacing: -0.04em; }
 .stat-card.alert .stat-value { color: var(--brand); }

@@ -11,27 +11,27 @@
       </div>
     </div>
     <div class="stats-row">
-      <div class="stat-card alert" (click)="setFilter('breach')">
+      <div class="stat-card alert" [class.selected]="activeFilter() === 'breach'" (click)="setFilter('breach')">
         <div class="stat-label">SLA breaches</div>
         <div class="stat-value">{{ dashboard()!.stats.slaBreached }}</div>
         <div class="stat-delta bad">Requires immediate action</div>
       </div>
-      <div class="stat-card" (click)="setFilter('all')">
+      <div class="stat-card" [class.selected]="activeFilter() === 'all'" (click)="setFilter('all')">
         <div class="stat-label">Active cases</div>
         <div class="stat-value">{{ dashboard()!.stats.totalOpen }}</div>
         <div class="stat-delta">Across all programs</div>
       </div>
-      <div class="stat-card" (click)="setFilter('all')">
+      <div class="stat-card" (click)="router.navigate(['/tasks'])">
         <div class="stat-label">Open tasks</div>
         <div class="stat-value">{{ dashboard()!.openTasks.length }}</div>
-        <div class="stat-delta">In your queue</div>
+        <div class="stat-delta">View task queue →</div>
       </div>
-      <div class="stat-card" (click)="setFilter('waiting')">
+      <div class="stat-card" [class.selected]="activeFilter() === 'waiting'" (click)="setFilter('waiting')">
         <div class="stat-label">Pending consent</div>
         <div class="stat-value">{{ dashboard()!.stats.pendingConsent }}</div>
         <div class="stat-delta">Awaiting patient</div>
       </div>
-      <div class="stat-card" (click)="setFilter('action')">
+      <div class="stat-card" [class.selected]="activeFilter() === 'pa'" (click)="setFilter('pa')">
         <div class="stat-label">Pending PA</div>
         <div class="stat-value">{{ dashboard()!.stats.pendingPA }}</div>
         <div class="stat-delta">Prior auth in progress</div>
@@ -52,6 +52,7 @@
           <div class="filter-chip" [class.active]="activeFilter() === 'breach'" (click)="setFilter('breach')">SLA breach</div>
           <div class="filter-chip" [class.active]="activeFilter() === 'action'" (click)="setFilter('action')">Needs action</div>
           <div class="filter-chip" [class.active]="activeFilter() === 'waiting'" (click)="setFilter('waiting')">Waiting</div>
+          <div class="filter-chip" [class.active]="activeFilter() === 'pa'" (click)="setFilter('pa')">PA</div>
           <div class="filter-chip" [class.active]="activeFilter() === 'therapy'" (click)="setFilter('therapy')">On therapy</div>
         </div>
         @if (filteredCases().length === 0) {

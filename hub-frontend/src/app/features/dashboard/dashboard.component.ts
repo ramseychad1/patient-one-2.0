@@ -37,8 +37,9 @@ export class DashboardComponent implements OnInit {
     const filter = this.activeFilter();
     switch (filter) {
       case 'breach': return d.myCases.filter(c => c.slaBreachFlag);
-      case 'action': return d.myCases.filter(c => !c.slaBreachFlag && c.stage !== 'ADHERENCE');
+      case 'action': return d.myCases.filter(c => !c.slaBreachFlag && !['ADHERENCE', 'CONSENT', 'INTAKE'].includes(c.stage));
       case 'waiting': return d.myCases.filter(c => ['CONSENT', 'INTAKE'].includes(c.stage));
+      case 'pa': return d.myCases.filter(c => c.stage === 'PA');
       case 'therapy': return d.myCases.filter(c => c.stage === 'ADHERENCE');
       default: return d.myCases;
     }
