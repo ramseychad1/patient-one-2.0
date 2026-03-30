@@ -46,6 +46,7 @@ public class ActionHandlerRegistry {
         actionService.registerHandler("GENERATE_SOB_FAX", new GenerateSobFaxHandler());
         actionService.registerHandler("GENERATE_PA_PACKAGE", new GeneratePaPackageHandler());
         actionService.registerHandler("RECORD_PA_SUBMISSION", new RecordPaSubmissionHandler());
+        actionService.registerHandler("CHECK_PA_STATUS", new CheckPaStatusHandler());
         actionService.registerHandler("EVALUATE_FA", new EvaluateFaHandler());
         actionService.registerHandler("ENROLL_COPAY", new EnrollCopayHandler());
         actionService.registerHandler("ROUTE_TO_SP", new RouteToSpHandler());
@@ -258,6 +259,43 @@ public class ActionHandlerRegistry {
         @Override public String getNextStage(HubCase hc) { return "PA"; }
         @Override public String getNextActionKey(HubCase hc) { return "CHECK_PA_STATUS"; }
         @Override public String getNextActionLabel(HubCase hc) { return "Check PA status"; }
+    }
+
+    class CheckPaStatusHandler implements ActionHandler {
+        @Override
+        public ActionResultDto.StubResult execute(HubCase hc, Map<String, Object> payload, AuthenticatedUser user) {
+            simulateLatency(800, 2000);
+            String scenario = actionService.getDemoScenario();
+            String decision = "PA_DENIED".equals(scenario) ? "DENIED" : "APPROVED";
+            Map<String, String> fields = new LinkedHashMap<>();
+            fields.put("pa_status", decision);
+            fields.put("payer", "BlueCross BlueShield");
+            fields.put("turnaround_days", "7");
+            if ("APPROVED".equals(decision)) {
+                fields.put("authorization_number", "AUTH-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+                fields.put("effective_date", java.time.LocalDate.now().toString());
+                fields.put("end_date", java.time.LocalDate.now().plusYears(1).toString());
+                hc.setPaStatus("APPROVED");
+            } else {
+                fields.put("denial_reason", "Step therapy requirement not met");
+                fields.put("denial_code", "ST-001");
+                fields.put("appeal_deadline", java.time.LocalDate.now().plusDays(30).toString());
+                hc.setPaStatus("DENIED");
+            }
+            return new ActionResultDto.StubResult("EpaService", 1450, fields);
+        }
+        @Override public String getNextState(HubCase hc) {
+            return "APPROVED".equals(hc.getPaStatus()) ? "PA_APPROVED" : "PA_DENIED";
+        }
+        @Override public String getNextStage(HubCase hc) {
+            return "APPROVED".equals(hc.getPaStatus()) ? "FINANCIAL" : "PA";
+        }
+        @Override public String getNextActionKey(HubCase hc) {
+            return "APPROVED".equals(hc.getPaStatus()) ? "EVALUATE_FA" : "SUBMIT_PA_APPEAL";
+        }
+        @Override public String getNextActionLabel(HubCase hc) {
+            return "APPROVED".equals(hc.getPaStatus()) ? "Evaluate financial assistance" : "Submit PA appeal";
+        }
     }
 
     class EvaluateFaHandler implements ActionHandler {
