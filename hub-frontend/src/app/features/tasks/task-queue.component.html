@@ -1,0 +1,36 @@
+<div class="page-header">
+  <div class="page-title">Task Queue</div>
+  <div class="page-sub">{{ filteredTasks().length }} tasks in your queue</div>
+</div>
+<div class="page-body">
+  <div class="filter-row">
+    <div class="filter-chip" [class.active]="activeFilter() === 'all'" (click)="setFilter('all')">All</div>
+    <div class="filter-chip" [class.active]="activeFilter() === 'high'" (click)="setFilter('high')">High priority</div>
+    <div class="filter-chip" [class.active]="activeFilter() === 'today'" (click)="setFilter('today')">Due today</div>
+    <div class="filter-chip" [class.active]="activeFilter() === 'overdue'" (click)="setFilter('overdue')">Overdue</div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">Loading tasks...</div>
+  } @else if (filteredTasks().length === 0) {
+    <div class="empty-state">No tasks match this filter.</div>
+  } @else {
+    <div class="task-list">
+      @for (t of filteredTasks(); track t.id) {
+        <div class="task-row" (click)="openCase(t)">
+          <div class="task-check" (click)="completeTask(t, $event)"></div>
+          <div class="task-body">
+            <div class="task-title">{{ t.title }}</div>
+            <div class="task-meta">{{ t.taskType }} · {{ t.caseId.substring(0, 8) }}...</div>
+          </div>
+          <div class="task-right">
+            <span class="task-priority" [ngClass]="getPriorityClass(t.priority)">{{ t.priority }}</span>
+            @if (t.dueAt) {
+              <span class="task-due" [class.overdue]="isOverdue(t.dueAt)">{{ isOverdue(t.dueAt) ? 'Overdue' : 'Due ' + formatDate(t.dueAt) }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

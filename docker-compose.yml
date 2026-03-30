@@ -1,0 +1,38 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: hub_dev
+      POSTGRES_USER: hub
+      POSTGRES_PASSWORD: localdevpassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  api:
+    build: ./hub-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hub_dev
+      SPRING_DATASOURCE_USERNAME: hub
+      SPRING_DATASOURCE_PASSWORD: localdevpassword
+      FLYWAY_DATASOURCE_URL: jdbc:postgresql://db:5432/hub_dev
+      FLYWAY_DATASOURCE_USERNAME: hub
+      JWT_SECRET: ${JWT_SECRET}
+      DEMO_SCENARIO: ${DEMO_SCENARIO:-DEFAULT}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+    depends_on:
+      - db
+
+  frontend:
+    build: ./hub-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

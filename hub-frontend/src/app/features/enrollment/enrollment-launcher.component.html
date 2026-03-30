@@ -1,0 +1,155 @@
+<div class="page-header">
+  <div class="page-title">New enrollment</div>
+  <div class="page-sub">Select an enrollment source to start a new case.</div>
+</div>
+<div class="page-body">
+  <div class="tiles-grid">
+    <!-- Fax/PDF -->
+    <div class="tile" (click)="openModal('fax')">
+      <div class="tile-accent red"></div>
+      <div class="tile-body">
+        <div class="tile-icon red"><svg viewBox="0 0 16 16"><path d="M6.5 1h3L14 5.5V15H2V1h4.5zm0 1.5H3.5v11h9V6H6.5V2.5zm1.5 0V5h3L8 2.5z"/></svg></div>
+        <div class="tile-label">Fax / PDF Upload</div>
+        <div class="tile-name">Upload enrollment form</div>
+        <div class="tile-desc">HCP faxes or uploads a PDF enrollment form. OCR extracts patient data.</div>
+        <div class="tile-meta"><span>OCR extraction</span><span>·</span><span>MI likely</span></div>
+        <div class="tile-footer">
+          <button class="tile-btn red">Start fax enrollment →</button>
+          <span class="tile-risk high">High MI risk</span>
+        </div>
+      </div>
+    </div>
+    <!-- eRX -->
+    <div class="tile" (click)="openModal('erx')">
+      <div class="tile-accent teal"></div>
+      <div class="tile-body">
+        <div class="tile-icon teal"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 2.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zM7 5h2v3.5l2.5 1.5-.75 1.3L7.5 9V5H7z"/></svg></div>
+        <div class="tile-label">eRX / SureScripts</div>
+        <div class="tile-name">Electronic prescription</div>
+        <div class="tile-desc">Structured data from the SureScripts network. Fewer errors, faster intake.</div>
+        <div class="tile-meta"><span>Structured data</span><span>·</span><span>Some MI possible</span></div>
+        <div class="tile-footer">
+          <button class="tile-btn teal">Start eRX enrollment →</button>
+          <span class="tile-risk med">Medium MI risk</span>
+        </div>
+      </div>
+    </div>
+    <!-- DEP -->
+    <div class="tile" (click)="openModal('dep')">
+      <div class="tile-accent purple"></div>
+      <div class="tile-body">
+        <div class="tile-icon purple"><svg viewBox="0 0 16 16"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm1 3H7v2H5v2h2v2h2V8h2V6H9V4z"/></svg></div>
+        <div class="tile-label">Digital Enrollment Portal</div>
+        <div class="tile-name">Web form enrollment</div>
+        <div class="tile-desc">HCP or patient completes a web form. All required fields enforced at submission.</div>
+        <div class="tile-meta"><span>All fields required</span><span>·</span><span>No MI expected</span></div>
+        <div class="tile-footer">
+          <button class="tile-btn purple">Start DEP enrollment →</button>
+          <span class="tile-risk low">Low MI risk</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEP Modal -->
+@if (activeModal() === 'dep') {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">Digital Enrollment Portal</span>
+        <span class="modal-close" (click)="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        @if (aksWarning()) {
+          <div class="aks-banner">Government insurance detected. Copay assistance not available under AKS.</div>
+        }
+        <div class="form-section">Patient</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">First name *</label><input class="form-input" [(ngModel)]="dep.firstName"></div>
+          <div class="form-group"><label class="form-label">Last name *</label><input class="form-input" [(ngModel)]="dep.lastName"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Date of birth *</label><input class="form-input" type="date" [(ngModel)]="dep.dob"></div>
+          <div class="form-group"><label class="form-label">Phone</label><input class="form-input" [(ngModel)]="dep.phone"></div>
+        </div>
+        <div class="form-section">Insurance</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Insurance type *</label>
+            <select class="form-input" [(ngModel)]="dep.insuranceType" (ngModelChange)="onInsuranceTypeChange()">
+              <option value="COMMERCIAL">Commercial</option>
+              <option value="MEDICARE">Medicare</option>
+              <option value="MEDICAID">Medicaid</option>
+              <option value="TRICARE">TRICARE</option>
+              <option value="VA">VA</option>
+              <option value="UNINSURED">Uninsured</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Plan name</label><input class="form-input" [(ngModel)]="dep.planName"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Member ID</label><input class="form-input" [(ngModel)]="dep.memberId" [disabled]="dep.insuranceType === 'UNINSURED'"></div>
+          <div class="form-group"><label class="form-label">Group number</label><input class="form-input" [(ngModel)]="dep.groupNumber"></div>
+        </div>
+        <div class="form-section">Prescriber</div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">NPI</label><input class="form-input" [(ngModel)]="dep.npi"></div>
+          <div class="form-group"><label class="form-label">Practice</label><input class="form-input" [(ngModel)]="dep.practiceName"></div>
+        </div>
+        <button class="submit-btn" (click)="submitDep()" [disabled]="submitting() || !dep.firstName || !dep.lastName || !dep.dob">
+          {{ submitting() ? 'Creating case...' : 'Create enrollment →' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- eRX Modal -->
+@if (activeModal() === 'erx') {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">eRX / SureScripts Enrollment</span>
+        <span class="modal-close" (click)="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="erx-payload">
+          <div class="erx-label">SureScripts Payload</div>
+          <div class="erx-row"><span class="erx-key">Transaction ID</span><span class="erx-val">{{ erx.transactionId }}</span></div>
+          <div class="erx-row"><span class="erx-key">Patient</span><span class="erx-val">{{ erx.patientFirst }} {{ erx.patientLast }}</span></div>
+          <div class="erx-row"><span class="erx-key">DOB</span><span class="erx-val">{{ erx.dob }}</span></div>
+          <div class="erx-row"><span class="erx-key">Prescriber</span><span class="erx-val">Dr. {{ erx.prescriberFirst }} {{ erx.prescriberLast }} (NPI: {{ erx.npi }})</span></div>
+          <div class="erx-row"><span class="erx-key">Drug</span><span class="erx-val">{{ erx.drug }}</span></div>
+        </div>
+        <div class="mi-banner">Missing fields detected: insurance_member_id, diagnosis_code — MI workflow will trigger</div>
+        <button class="submit-btn" (click)="submitErx()" [disabled]="submitting()">
+          {{ submitting() ? 'Creating case...' : 'Confirm eRX enrollment →' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Fax Modal -->
+@if (activeModal() === 'fax') {
+  <div class="modal-backdrop" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">Fax / PDF Upload</span>
+        <span class="modal-close" (click)="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="upload-zone" (click)="submitFax()">
+          <div class="upload-icon">📄</div>
+          <div class="upload-text">Click to simulate PDF upload + OCR</div>
+          <div class="upload-sub">In production, drag & drop PDF here</div>
+        </div>
+        <div class="mi-banner">OCR simulation will flag 3 missing fields — MI workflow will trigger</div>
+        <button class="submit-btn" (click)="submitFax()" [disabled]="submitting()">
+          {{ submitting() ? 'Creating case...' : 'Process fax enrollment →' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

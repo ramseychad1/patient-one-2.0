@@ -1,0 +1,63 @@
+<div class="topbar">
+  <a class="topbar-logo" routerLink="/dashboard">
+    <div class="topbar-logo-mark"><svg viewBox="0 0 14 14"><path d="M7 1L13 4V10L7 13L1 10V4L7 1Z"/></svg></div>
+    <span class="topbar-logo-name">Hub<span>Access</span></span>
+  </a>
+  <div class="topbar-divider"></div>
+  <span class="topbar-title">Meridian Therapeutics · Velarix Access Program</span>
+  <div class="topbar-right">
+    <div class="scenario-wrapper">
+      <div class="topbar-scenario" (click)="scenarioOpen = !scenarioOpen">
+        <div class="scenario-dot" [ngClass]="scenarioDotClass()"></div>
+        <span class="scenario-label">{{ scenarioService.scenario() }}</span>
+      </div>
+      @if (scenarioOpen) {
+        <div class="scenario-dropdown">
+          @for (s of scenarios; track s.key) {
+            <div class="scenario-option" [class.selected]="scenarioService.scenario() === s.key" (click)="setScenario(s.key)">
+              <div class="scenario-opt-dot" [ngClass]="s.dotClass"></div>
+              <div class="scenario-opt-info">
+                <div class="scenario-opt-name">{{ s.key }}</div>
+                <div class="scenario-opt-desc">{{ s.desc }}</div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+    <button class="topbar-new-btn" routerLink="/cases/new">+ New enrollment</button>
+    <div class="topbar-avatar" [title]="fullName()">{{ initials() }}</div>
+  </div>
+</div>
+<div class="shell">
+  <nav class="nav">
+    <div class="nav-section-label">Workspace</div>
+    <a class="nav-item" routerLink="/dashboard" routerLinkActive="active">
+      <svg class="nav-item-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
+      Home
+    </a>
+    <a class="nav-item" routerLink="/cases" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+      <svg class="nav-item-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M3 2h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1zm1 3v1h8V5H4zm0 3v1h8V8H4zm0 3v1h5v-1H4z"/></svg>
+      My Cases
+    </a>
+    <a class="nav-item" routerLink="/tasks" routerLinkActive="active">
+      <svg class="nav-item-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 2a5 5 0 100 10A5 5 0 008 3zm0 2v3l2 2-1.4 1.4L6 9V5h2z"/></svg>
+      Task Queue
+    </a>
+    <div class="nav-spacer"></div>
+    <div class="nav-section-label">System</div>
+    <a class="nav-item" routerLink="/admin" routerLinkActive="active">
+      <svg class="nav-item-icon" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 110 14A7 7 0 018 1zm0 6H5v2h3v3h2v-3h3V7H8V4H6v3z"/></svg>
+      Admin
+    </a>
+    <div class="nav-spacer"></div>
+    <div class="nav-footer">
+      <div class="nav-user-name">{{ fullName() }}</div>
+      <div class="nav-user-role">{{ role() }}</div>
+      <a class="nav-signout" (click)="logout()">Sign out</a>
+    </div>
+  </nav>
+  <main class="main">
+    <router-outlet></router-outlet>
+  </main>
+</div>

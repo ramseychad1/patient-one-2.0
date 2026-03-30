@@ -1,0 +1,119 @@
+<div class="page-header">
+  <div class="page-title">Administration</div>
+  <div class="page-sub">Manage manufacturers, programs, and users.</div>
+</div>
+<div class="admin-grid">
+  <!-- Manufacturers -->
+  <div class="admin-panel">
+    <div class="panel-head"><span class="panel-head-title">Manufacturers</span><span class="panel-head-count">{{ manufacturers().length }}</span></div>
+    <div class="panel-list">
+      @for (m of manufacturers(); track m.id) {
+        <div class="panel-item" [class.selected]="selectedMfr()?.id === m.id" (click)="selectMfr(m)">
+          <div class="panel-item-name">{{ m.name }}</div>
+          <div class="panel-item-meta">{{ m.programCount }} programs · {{ m.status }}</div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Programs -->
+  <div class="admin-panel">
+    <div class="panel-head"><span class="panel-head-title">Programs</span></div>
+    <div class="panel-list">
+      @if (!selectedMfr()) {
+        <div class="panel-empty">Select a manufacturer</div>
+      } @else {
+        @for (p of programs(); track p.id) {
+          <div class="panel-item" [class.selected]="selectedProgram()?.id === p.id" (click)="selectProgram(p)">
+            <div class="panel-item-name">{{ p.name }}</div>
+            <div class="panel-item-meta">{{ p.drugBrandName }} · {{ p.status }}</div>
+          </div>
+        }
+      }
+    </div>
+  </div>
+
+  <!-- Config -->
+  <div class="admin-panel config-panel">
+    <div class="panel-head">
+      <span class="panel-head-title">Program Config</span>
+      @if (saveSuccess()) { <span class="save-toast">Saved</span> }
+    </div>
+    @if (!config()) {
+      <div class="panel-empty">Select a program</div>
+    } @else {
+      <div class="config-body">
+        <div class="config-section">Workflow Features</div>
+        <label class="toggle-row"><span>Prior auth required</span><input type="checkbox" [(ngModel)]="config().priorAuthRequired"></label>
+        <label class="toggle-row"><span>Copay assistance</span><input type="checkbox" [(ngModel)]="config().copayAssistanceEnabled"></label>
+        <label class="toggle-row"><span>PAP enabled</span><input type="checkbox" [(ngModel)]="config().papEnabled"></label>
+        <label class="toggle-row"><span>Bridge supply</span><input type="checkbox" [(ngModel)]="config().bridgeSupplyEnabled"></label>
+        <label class="toggle-row"><span>eBV enabled</span><input type="checkbox" [(ngModel)]="config().ebvEnabled"></label>
+        <label class="toggle-row"><span>eIV enabled</span><input type="checkbox" [(ngModel)]="config().eivEnabled"></label>
+        <label class="toggle-row"><span>Adherence program</span><input type="checkbox" [(ngModel)]="config().adherenceProgramEnabled"></label>
+
+        <div class="config-section">Thresholds</div>
+        <div class="config-field"><label>FPL threshold %</label><input type="number" [(ngModel)]="config().fplThresholdPct"></div>
+        <div class="config-field"><label>PA submit SLA (days)</label><input type="number" [(ngModel)]="config().paSubmitSlaBusinessDays"></div>
+        <div class="config-field"><label>PA appeal window (days)</label><input type="number" [(ngModel)]="config().paAppealWindowDays"></div>
+
+        <button class="save-btn" (click)="saveConfig()" [disabled]="saving()">
+          {{ saving() ? 'Saving...' : 'Save changes' }}
+        </button>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Users Table (Admin only) -->
+@if (isAdmin()) {
+  <div class="users-section">
+    <div class="users-header">
+      <span class="users-title">Users</span>
+      <button class="invite-btn" (click)="showInviteModal.set(true)">+ Invite user</button>
+    </div>
+    <table class="users-table">
+      <thead>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last login</th></tr>
+      </thead>
+      <tbody>
+        @for (u of users(); track u.id) {
+          <tr>
+            <td class="user-name">{{ u.firstName }} {{ u.lastName }}</td>
+            <td>{{ u.email }}</td>
+            <td><span class="role-badge">{{ u.roles?.[0] || '—' }}</span></td>
+            <td><span class="status-dot" [class.active]="u.isActive"></span>{{ u.isActive ? 'Active' : 'Inactive' }}</td>
+            <td class="user-login">{{ u.lastLoginAt || 'Never' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}
+
+<!-- Invite Modal -->
+@if (showInviteModal()) {
+  <div class="modal-backdrop" (click)="showInviteModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head"><span class="modal-title">Invite User</span><span class="modal-close" (click)="showInviteModal.set(false)">&times;</span></div>
+      <div class="modal-body">
+        @if (inviteResult()) {
+          <div class="invite-success">
+            User created. Temp password: <code>{{ inviteResult().tempPassword }}</code>
+          </div>
+        } @else {
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" [(ngModel)]="inviteEmail"></div>
+          <div class="form-group"><label class="form-label">First name</label><input class="form-input" [(ngModel)]="inviteFirstName"></div>
+          <div class="form-group"><label class="form-label">Last name</label><input class="form-input" [(ngModel)]="inviteLastName"></div>
+          <div class="form-group"><label class="form-label">Role</label>
+            <select class="form-input" [(ngModel)]="inviteRole">
+              <option value="CASE_MANAGER">Case Manager</option>
+              <option value="HUB_ADMIN">Hub Admin</option>
+            </select>
+          </div>
+          <button class="save-btn" (click)="inviteUser()">Send invite</button>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,334 @@
+@if (loading()) {
+  <div class="loading-state">Loading case...</div>
+} @else {
+  <!-- Case Header -->
+  <div class="case-header">
+    <div class="case-header-top">
+      <div class="case-avatar">{{ patientInitials() }}</div>
+      <div class="case-identity">
+        <div class="case-name">{{ caseDetail()!.patient.lastName }}, {{ caseDetail()!.patient.firstName }}</div>
+        <div class="case-meta">
+          <span class="case-meta-item">DOB {{ formatDate(caseDetail()!.patient.dateOfBirth) }} ({{ patientAge() }})</span>
+          <span class="case-meta-sep">·</span>
+          <span class="case-meta-item">{{ caseDetail()!.patient.gender || 'Unknown' }}</span>
+          @if (caseDetail()!.insurancePlan) {
+            <span class="case-meta-sep">·</span>
+            <span class="case-meta-tag" [ngClass]="getInsuranceTagClass()">{{ caseDetail()!.insurancePlan!.planName }}</span>
+          }
+          <span class="case-meta-sep">·</span>
+          <span class="case-meta-item">{{ caseDetail()!.programName }}</span>
+        </div>
+        <div class="case-number">{{ caseDetail()!.caseNumber }} · Enrolled via {{ caseDetail()!.sourceChannel }} · Assigned to you</div>
+      </div>
+      <div class="case-header-actions">
+        <button class="btn" (click)="showNoteModal.set(true)">+ Add note</button>
+        <button class="btn">Reassign</button>
+        <button class="btn btn-outline-teal">Escalate</button>
+      </div>
+    </div>
+
+    @if (caseDetail()!.slaBreachFlag) {
+      <div class="alert-banner">
+        <div class="alert-dot"></div>
+        <span>SLA breach — {{ caseDetail()!.workflowState }} requires action</span>
+        <span class="alert-action">Resolve now →</span>
+      </div>
+    }
+
+    <!-- Journey Stepper -->
+    <div class="journey-stepper">
+      @for (stage of stages; track stage) {
+        <div class="journey-step" [ngClass]="getStageState(stage)">
+          <div class="js-indicator"></div>
+          <div class="js-label">{{ getStageLabel(stage) }}</div>
+          <div class="js-sub">{{ getStageSub(stage) }}</div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="case-body">
+    <!-- Action Column -->
+    <div class="action-col">
+      <!-- Next Action Panel -->
+      @if (caseDetail()!.workflowStateDetail) {
+        <div class="action-panel">
+          <div class="action-panel-head">
+            <div class="action-panel-head-icon">
+              <svg viewBox="0 0 14 14"><path d="M7 1L13 4.5V10L7 13L1 10V4.5L7 1zm0 2.3L3 5.8V9.2L7 11l4-1.8V5.8L7 3.3z"/></svg>
+            </div>
+            <div>
+              <div class="action-panel-stage">{{ caseDetail()!.stage }} — {{ getStageLabel(caseDetail()!.stage) }}</div>
+              <div class="action-panel-title">{{ caseDetail()!.workflowStateDetail!.nextActionLabel || 'No pending action' }}</div>
+            </div>
+            <div class="action-panel-sla" [ngClass]="getSlaClass()">
+              <div class="sla-dot"></div>
+              {{ caseDetail()!.slaBreachFlag ? 'SLA breached' : 'On track' }}
+            </div>
+          </div>
+          <div class="action-panel-body">
+            @if (actionLoading()) {
+              <div class="action-loading"><div class="spinner"></div> Processing action...</div>
+            } @else {
+              <div class="action-desc">{{ getActionDescription() }}</div>
+              @if (caseDetail()!.insurancePlan) {
+                <div class="action-context">
+                  <strong>Plan:</strong> {{ caseDetail()!.insurancePlan!.planName }}<br>
+                  @if (caseDetail()!.insurancePlan!.paRequired) {
+                    <strong>PA required:</strong> Yes<br>
+                  }
+                  @if (caseDetail()!.prescriber) {
+                    <strong>Prescriber:</strong> Dr. {{ caseDetail()!.prescriber!.lastName }}
+                  }
+                </div>
+              }
+              <button class="action-btn" (click)="performAction()" [class.loading]="actionLoading()">
+                <svg viewBox="0 0 16 16"><path d="M6.5 1h3L14 5.5V15H2V1h4.5zm0 1.5H3.5v11h9V6H6.5V2.5zm1.5 0V5h3L8 2.5z"/></svg>
+                {{ caseDetail()!.workflowStateDetail!.nextActionLabel }}
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Stub Result Panel -->
+      @if (actionResult(); as ar) {
+        @if (ar.stubResult) {
+          <div class="stub-panel">
+            <div class="stub-panel-head">
+              <span class="stub-label">Stub result</span>
+              <span class="stub-service">{{ ar.stubResult.serviceName }}</span>
+              <span class="stub-latency">{{ ar.stubResult.latencyMs }}ms</span>
+            </div>
+            <div class="stub-body">
+              @for (entry of ar.stubResult.fields | keyvalue; track entry.key) {
+                <div class="stub-row">
+                  <span class="stub-key">{{ entry.key }}</span>
+                  <span class="stub-val" [ngClass]="getStubValueClass(entry.key, entry.value)">{{ entry.value }}</span>
+                </div>
+              }
+            </div>
+            <div class="stub-expand">
+              <div class="stub-expand-toggle" (click)="showStubJson.set(!showStubJson())">
+                {{ showStubJson() ? '▼' : '▶' }} View full response JSON
+              </div>
+              @if (showStubJson()) {
+                <pre class="stub-json">{{ ar.stubResult.fields | json }}</pre>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      <!-- Open Tasks -->
+      @if (caseDetail()!.openTasks.length > 0) {
+        <div class="tasks-panel">
+          <div class="panel-head">
+            <span class="panel-head-title">Open tasks</span>
+            <span class="panel-head-count">{{ caseDetail()!.openTasks.length }}</span>
+          </div>
+          @for (t of caseDetail()!.openTasks; track t.id) {
+            <div class="task-item">
+              <div class="task-check"></div>
+              <div class="task-body">
+                <div class="task-title">{{ t.title }}</div>
+                <div class="task-meta">
+                  <span class="task-priority" [ngClass]="t.priority === 'HIGH' ? 'high' : t.priority === 'MEDIUM' ? 'med' : 'low'">{{ t.priority }}</span>
+                  @if (t.dueAt) { <span>Due {{ formatDate(t.dueAt) }}</span> }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <!-- Info Column -->
+    <div class="info-col">
+      <!-- Patient Card -->
+      <div class="info-card">
+        <div class="info-card-head"><span class="info-card-title">Patient</span></div>
+        <div class="info-card-body">
+          <div class="info-row"><span class="info-key">Phone</span><span class="info-val">{{ caseDetail()!.patient.phonePrimary || '—' }}</span></div>
+          <div class="info-row"><span class="info-key">Email</span><span class="info-val">{{ caseDetail()!.patient.email || '—' }}</span></div>
+          <div class="info-row"><span class="info-key">Address</span><span class="info-val">{{ caseDetail()!.patient.addressLine1 || '—' }}{{ caseDetail()!.patient.city ? ', ' + caseDetail()!.patient.city : '' }}{{ caseDetail()!.patient.state ? ' ' + caseDetail()!.patient.state : '' }} {{ caseDetail()!.patient.zip || '' }}</span></div>
+          <div class="info-row"><span class="info-key">Contact pref.</span><span class="info-val">{{ caseDetail()!.patient.preferredContactMethod || '—' }}</span></div>
+          <div class="info-row"><span class="info-key">Language</span><span class="info-val">{{ caseDetail()!.patient.preferredLanguage || 'English' }}</span></div>
+        </div>
+      </div>
+
+      <!-- Insurance Card -->
+      @if (caseDetail()!.insurancePlan) {
+        <div class="info-card">
+          <div class="info-card-head">
+            <span class="info-card-title">Insurance</span>
+            @if (caseDetail()!.benefitsVerification) {
+              <span class="info-card-badge">eBV confirmed {{ formatDate(caseDetail()!.benefitsVerification!.completedAt) }}</span>
+            }
+          </div>
+          <div class="info-card-body">
+            <div class="info-row"><span class="info-key">Plan type</span><span class="info-val pill" [ngClass]="getInsuranceTagClass()">{{ caseDetail()!.insurancePlan!.insuranceType }}</span></div>
+            <div class="info-row"><span class="info-key">Plan name</span><span class="info-val">{{ caseDetail()!.insurancePlan!.planName }}</span></div>
+            <div class="info-row"><span class="info-key">Member ID</span><span class="info-val" style="font-family:monospace">{{ caseDetail()!.insurancePlan!.memberId || '—' }}</span></div>
+            @if (caseDetail()!.insurancePlan!.deductibleIndividual != null) {
+              <div class="info-row"><span class="info-key">Deductible</span><span class="info-val">${{ caseDetail()!.insurancePlan!.deductibleMet }} / ${{ caseDetail()!.insurancePlan!.deductibleIndividual }} met</span></div>
+            }
+            @if (caseDetail()!.insurancePlan!.oopMaxIndividual != null) {
+              <div class="info-row"><span class="info-key">OOP max</span><span class="info-val">${{ caseDetail()!.insurancePlan!.oopMet }} / ${{ caseDetail()!.insurancePlan!.oopMaxIndividual }} met</span></div>
+            }
+            @if (caseDetail()!.insurancePlan!.copayDrug != null) {
+              <div class="info-row"><span class="info-key">Drug copay</span><span class="info-val">${{ caseDetail()!.insurancePlan!.copayDrug }}</span></div>
+            }
+            @if (caseDetail()!.insurancePlan!.formularyTier != null) {
+              <div class="info-row"><span class="info-key">Formulary tier</span><span class="info-val">Tier {{ caseDetail()!.insurancePlan!.formularyTier }}</span></div>
+            }
+            <div class="info-row"><span class="info-key">PA required</span><span class="info-val" [style.color]="caseDetail()!.insurancePlan!.paRequired ? 'var(--danger)' : 'var(--ok)'">{{ caseDetail()!.insurancePlan!.paRequired ? 'Yes' : 'No' }}</span></div>
+          </div>
+        </div>
+      }
+
+      <!-- Prescriber Card -->
+      @if (caseDetail()!.prescriber) {
+        <div class="info-card">
+          <div class="info-card-head"><span class="info-card-title">Prescriber</span></div>
+          <div class="info-card-body">
+            <div class="info-row"><span class="info-key">Name</span><span class="info-val">Dr. {{ caseDetail()!.prescriber!.firstName }} {{ caseDetail()!.prescriber!.lastName }}</span></div>
+            <div class="info-row"><span class="info-key">NPI</span><span class="info-val" style="font-family:monospace">{{ caseDetail()!.prescriber!.npi }}</span></div>
+            @if (caseDetail()!.prescriber!.practiceName) {
+              <div class="info-row"><span class="info-key">Practice</span><span class="info-val">{{ caseDetail()!.prescriber!.practiceName }}</span></div>
+            }
+            <div class="info-row"><span class="info-key">Phone</span><span class="info-val">{{ caseDetail()!.prescriber!.phone || '—' }}</span></div>
+            <div class="info-row"><span class="info-key">Fax</span><span class="info-val">{{ caseDetail()!.prescriber!.fax || '—' }}</span></div>
+          </div>
+        </div>
+      }
+
+      <!-- Eligibility Summary (Financial stage) -->
+      @if (caseDetail()!.stage === 'FINANCIAL' && caseDetail()!.financialAssistance.length > 0) {
+        <div class="info-card">
+          <div class="info-card-head"><span class="info-card-title">Eligibility Summary</span></div>
+          <div class="info-card-body">
+            @for (fa of caseDetail()!.financialAssistance; track fa.id) {
+              <div class="eligibility-row">
+                <span class="eligibility-type">{{ fa.faType }}</span>
+                <span class="pa-status-badge" [ngClass]="fa.status === 'ACTIVE' || fa.status === 'APPROVED' || fa.status === 'PENDING' ? 'approved' : 'denied'">{{ fa.status }}</span>
+                @if (fa.denialReason) {
+                  <div class="eligibility-reason" [class.aks]="fa.denialReason!.includes('AKS')">{{ fa.denialReason }}</div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- SP Assignment (Triage stage) -->
+      @if (caseDetail()!.stage === 'TRIAGE') {
+        <div class="info-card">
+          <div class="info-card-head"><span class="info-card-title">SP Assignment</span></div>
+          <div class="info-card-body">
+            <div class="info-row"><span class="info-key">Pharmacy</span><span class="info-val">CVS Specialty</span></div>
+            <div class="info-row"><span class="info-key">Address</span><span class="info-val">1200 Health Pkwy, Columbus OH</span></div>
+            <div class="info-row"><span class="info-key">Phone</span><span class="info-val">800-555-0199</span></div>
+            <div class="info-row"><span class="info-key">Routing</span><span class="info-val">In-network per eBV</span></div>
+          </div>
+        </div>
+      }
+
+      <!-- Adherence Info -->
+      @if (caseDetail()!.stage === 'ADHERENCE') {
+        <div class="info-card">
+          <div class="info-card-head"><span class="info-card-title">Refill Schedule</span></div>
+          <div class="info-card-body">
+            <div class="info-row"><span class="info-key">Therapy start</span><span class="info-val">{{ formatDate(caseDetail()!.createdAt) }}</span></div>
+            <div class="info-row"><span class="info-key">Next refill</span><span class="info-val">7 days</span></div>
+            <div class="info-row"><span class="info-key">Days supply</span><span class="info-val">30 days</span></div>
+          </div>
+        </div>
+      }
+
+      <!-- PA History Card -->
+      @if (caseDetail()!.priorAuthorizations.length > 0) {
+        <div class="info-card">
+          <div class="info-card-head"><span class="info-card-title">Prior Authorizations</span><span class="panel-head-count">{{ caseDetail()!.priorAuthorizations.length }}</span></div>
+          <div class="info-card-body">
+            @for (pa of caseDetail()!.priorAuthorizations; track pa.id) {
+              <div class="pa-row">
+                <span class="pa-type">{{ pa.paType }}</span>
+                <span class="pa-status-badge" [ngClass]="pa.status === 'APPROVED' ? 'approved' : pa.status === 'DENIED' ? 'denied' : pa.status === 'SUBMITTED' ? 'submitted' : 'pending'">{{ pa.status }}</span>
+                @if (pa.submittedAt) { <span class="pa-date">{{ formatDate(pa.submittedAt) }}</span> }
+                @if (pa.denialReason) { <div class="pa-denial">{{ pa.denialReason }}</div> }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Financial Assistance Card -->
+      @if (caseDetail()!.financialAssistance.length > 0) {
+        <div class="info-card">
+          <div class="info-card-head"><span class="info-card-title">Financial Assistance</span></div>
+          <div class="info-card-body">
+            @for (fa of caseDetail()!.financialAssistance; track fa.id) {
+              <div class="info-row">
+                <span class="info-key">{{ fa.faType }}</span>
+                <span class="info-val pill" [ngClass]="fa.status === 'ACTIVE' || fa.status === 'APPROVED' ? '' : fa.status === 'DENIED' ? 'denied' : 'pending'">{{ fa.status }}</span>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Timeline Card -->
+      <div class="info-card">
+        <div class="info-card-head">
+          <span class="info-card-title">Timeline</span>
+          <span class="panel-head-count">{{ timeline().length }}</span>
+        </div>
+        <div class="timeline">
+          @for (entry of timeline(); track entry.id; let last = $last) {
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-icon" [ngClass]="getTimelineIconClass(entry.entryType)">
+                  @if (entry.entryType === 'STATUS_CHANGE') { → }
+                  @else if (entry.entryType === 'INTERACTION') { ✎ }
+                  @else { ◆ }
+                </div>
+                @if (!last) { <div class="tl-line"></div> }
+              </div>
+              <div class="tl-body">
+                <div class="tl-title">{{ entry.title }}</div>
+                @if (entry.description) {
+                  <div class="tl-desc">{{ entry.description }}</div>
+                }
+                <div class="tl-meta">
+                  <span>{{ entry.performedBy }}</span>
+                  <span>{{ formatDateTime(entry.occurredAt) }}</span>
+                  @if (entry.metadata['channel']) {
+                    <span class="tl-badge">{{ entry.metadata['channel'] }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note Modal -->
+  @if (showNoteModal()) {
+    <div class="modal-backdrop open" (click)="showNoteModal.set(false)">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <div class="modal-head">
+          <span class="modal-title">Add note</span>
+          <span class="modal-close" (click)="showNoteModal.set(false)">&times;</span>
+        </div>
+        <div class="modal-body">
+          <textarea class="note-textarea" [(ngModel)]="noteText" placeholder="Type your note here..."></textarea>
+          <button class="action-btn" style="margin-top:12px" (click)="addNote()">Save note</button>
+        </div>
+      </div>
+    </div>
+  }
+}

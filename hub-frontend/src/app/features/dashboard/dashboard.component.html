@@ -1,0 +1,135 @@
+@if (loading()) {
+  <div class="loading-state">Loading dashboard...</div>
+} @else if (error()) {
+  <div class="error-state">{{ error() }}</div>
+} @else {
+  <div class="page-head">
+    <div class="page-head-row">
+      <div>
+        <div class="greeting">{{ greeting() }}, <span>{{ user()?.firstName }}.</span></div>
+        <div class="page-head-sub">{{ dashboard()!.stats.totalOpen }} active cases · {{ dashboard()!.stats.slaBreached }} SLA breaches require attention</div>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card alert" (click)="setFilter('breach')">
+        <div class="stat-label">SLA breaches</div>
+        <div class="stat-value">{{ dashboard()!.stats.slaBreached }}</div>
+        <div class="stat-delta bad">Requires immediate action</div>
+      </div>
+      <div class="stat-card" (click)="setFilter('all')">
+        <div class="stat-label">Active cases</div>
+        <div class="stat-value">{{ dashboard()!.stats.totalOpen }}</div>
+        <div class="stat-delta">Across all programs</div>
+      </div>
+      <div class="stat-card" (click)="setFilter('all')">
+        <div class="stat-label">Open tasks</div>
+        <div class="stat-value">{{ dashboard()!.openTasks.length }}</div>
+        <div class="stat-delta">In your queue</div>
+      </div>
+      <div class="stat-card" (click)="setFilter('waiting')">
+        <div class="stat-label">Pending consent</div>
+        <div class="stat-value">{{ dashboard()!.stats.pendingConsent }}</div>
+        <div class="stat-delta">Awaiting patient</div>
+      </div>
+      <div class="stat-card" (click)="setFilter('action')">
+        <div class="stat-label">Pending PA</div>
+        <div class="stat-value">{{ dashboard()!.stats.pendingPA }}</div>
+        <div class="stat-delta">Prior auth in progress</div>
+      </div>
+    </div>
+  </div>
+  <div class="body-grid">
+    <div class="col-main">
+      <!-- My Cases -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-head-title">My cases</div>
+          <div class="panel-head-count">{{ filteredCases().length }}</div>
+          <div class="panel-head-right" routerLink="/cases">View all</div>
+        </div>
+        <div class="filter-row">
+          <div class="filter-chip" [class.active]="activeFilter() === 'all'" (click)="setFilter('all')">All</div>
+          <div class="filter-chip" [class.active]="activeFilter() === 'breach'" (click)="setFilter('breach')">SLA breach</div>
+          <div class="filter-chip" [class.active]="activeFilter() === 'action'" (click)="setFilter('action')">Needs action</div>
+          <div class="filter-chip" [class.active]="activeFilter() === 'waiting'" (click)="setFilter('waiting')">Waiting</div>
+          <div class="filter-chip" [class.active]="activeFilter() === 'therapy'" (click)="setFilter('therapy')">On therapy</div>
+        </div>
+        @if (filteredCases().length === 0) {
+          <div class="empty-state">No cases match this filter.</div>
+        }
+        @for (c of filteredCases(); track c.id; let i = $index) {
+          <div class="case-row" [class.sla-breach]="c.slaBreachFlag" (click)="openCase(c)">
+            <div class="case-avatar" [ngClass]="getAvatarClass(i)">{{ getInitials(c.patientName) }}</div>
+            <div class="case-body">
+              <div class="case-name">{{ c.patientName }}</div>
+              <div class="case-meta">{{ c.caseNumber }} · {{ c.programName }}{{ c.insuranceType ? ' · ' + c.insuranceType : '' }}</div>
+            </div>
+            <div class="case-right">
+              <span class="stage-pill" [ngClass]="getStagePillClass(c.stage)">{{ getStageLabel(c.stage) }}</span>
+              @if (c.slaBreachFlag) {
+                <span class="sla-label breach">SLA breached</span>
+              } @else {
+                <span class="sla-label">{{ c.workflowState }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      <!-- Open Tasks -->
+      @if (dashboard()!.openTasks.length > 0) {
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-head-title">My open tasks</div>
+            <div class="panel-head-count">{{ dashboard()!.openTasks.length }}</div>
+            <div class="panel-head-right" routerLink="/tasks">View all</div>
+          </div>
+          @for (t of dashboard()!.openTasks; track t.id) {
+            <div class="task-item" (click)="router.navigate(['/cases', t.caseId])">
+              <div class="task-check"></div>
+              <div class="task-body">
+                <div class="task-title">{{ t.title }}</div>
+                <div class="task-patient">{{ t.taskType }}{{ t.dueAt ? ' · Due ' + formatDate(t.dueAt) : '' }}</div>
+                <span class="task-priority" [ngClass]="getPriorityClass(t.priority)">
+                  {{ t.priority }}{{ t.slaBreached ? ' · SLA breached' : '' }}
+                </span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+    <!-- Sidebar -->
+    <div class="col-side">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-head-title">SLA alerts</div><div class="panel-head-count">{{ dashboard()!.slaBreaches.length }}</div></div>
+        <div class="sla-breach-list-wrap">
+          @for (b of dashboard()!.slaBreaches; track b.id) {
+            <div class="breach-item" (click)="openCase(b)">
+              <div class="breach-dot"></div>
+              <div class="breach-body">
+                <div class="breach-name">{{ b.patientName }}</div>
+                <div class="breach-detail breach">{{ b.caseNumber }} — {{ b.workflowState }}</div>
+              </div>
+            </div>
+          }
+          @if (dashboard()!.slaBreaches.length === 0) {
+            <div class="empty-breach">No SLA breaches</div>
+          }
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="panel-head-title">Quick actions</div></div>
+        <div class="quick-actions-wrap">
+          <div class="qa-btn" routerLink="/cases" [queryParams]="{action: 'new'}">
+            <div class="qa-btn-icon red"><svg viewBox="0 0 14 14"><path d="M7 1a6 6 0 110 12A6 6 0 017 1zm1 3H6v2H4v2h2v2h2V8h2V6H8V4z"/></svg></div>
+            <div><div class="qa-label">New enrollment</div><div class="qa-sub">Fax · eRX · DEP</div></div>
+          </div>
+          <div class="qa-btn" routerLink="/tasks">
+            <div class="qa-btn-icon teal"><svg viewBox="0 0 14 14"><path d="M7 1a6 6 0 110 12A6 6 0 017 1zm.5 3h-1v4l3 1.8-.75-1.3L7.5 7V4z"/></svg></div>
+            <div><div class="qa-label">Task queue</div><div class="qa-sub">{{ dashboard()!.openTasks.length }} open tasks</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+}

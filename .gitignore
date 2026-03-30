@@ -6,3 +6,26 @@ references.local/
 
 # MCP config
 .mcp.json
+
+# Environment
+.env
+
+# Java / Maven
+hub-api/target/
+*.class
+*.jar
+*.war
+*.log
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# Node / Angular
+hub-frontend/node_modules/
+hub-frontend/dist/
+hub-frontend/.angular/

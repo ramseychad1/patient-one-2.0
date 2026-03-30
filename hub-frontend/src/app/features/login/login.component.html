@@ -1,0 +1,60 @@
+<div class="login-wrap">
+  <div class="login-left">
+    <div class="login-logo">
+      <div class="login-logo-mark"><svg viewBox="0 0 18 18"><path d="M9 1L16 5V13L9 17L2 13V5L9 1Z"/></svg></div>
+      <span class="login-logo-name">Hub<span>Access</span></span>
+    </div>
+    <div class="login-hero">
+      <div class="login-hero-title">Patient access,<br>from referral<br>to adherence.</div>
+      <div class="login-hero-sub">Purpose-built case management for specialty pharmaceutical hub services organizations.</div>
+      <div class="login-creds">
+        <div class="login-creds-label">Demo credentials</div>
+        <div class="login-cred-row"><span class="login-cred-key">CM login</span><span class="login-cred-val">sarah.chen&#64;hubaccess.demo</span></div>
+        <div class="login-cred-row"><span class="login-cred-key">Password</span><span class="login-cred-val">Demo1234!</span></div>
+        <div class="login-cred-row"><span class="login-cred-key">Admin</span><span class="login-cred-val">admin&#64;hubaccess.demo</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="login-right">
+    <div class="login-form-wrap">
+      <div class="login-form-title">Sign in</div>
+      <div class="login-form-sub">Meridian Therapeutics — Velarix Access Program</div>
+
+      @if (error()) {
+        <div class="login-error show">{{ error() }}</div>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="login()">
+        <div class="form-group">
+          <label class="form-label">Email address</label>
+          <input class="form-input" type="email" formControlName="email" placeholder="you&#64;hubaccess.demo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" formControlName="password" placeholder="••••••••">
+        </div>
+        <div class="form-forgot"><a href="#">Forgot password?</a></div>
+        <button class="btn-login" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Signing in…' : 'Sign in →' }}
+        </button>
+      </form>
+
+      <div class="login-divider">
+        <div class="login-divider-line"></div>
+        <div class="login-divider-text">or sign in as</div>
+        <div class="login-divider-line"></div>
+      </div>
+      <div class="login-roles">
+        <div class="login-role-btn" (click)="quickLogin('sarah.chen@hubaccess.demo')">
+          <span class="login-role-label">Case Manager</span>
+          <span class="login-role-sub">Sarah Chen</span>
+        </div>
+        <div class="login-role-btn" (click)="quickLogin('admin@hubaccess.demo')">
+          <span class="login-role-label">Hub Admin</span>
+          <span class="login-role-sub">Admin</span>
+        </div>
+      </div>
+      <div class="login-footer">HubAccess v2.0 · Meridian Therapeutics tenant · PHI protected</div>
+    </div>
+  </div>
+</div>
