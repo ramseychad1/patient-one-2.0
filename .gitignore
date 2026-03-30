@@ -1,0 +1,8 @@
+# OS files
+.DS_Store
+
+# Local references
+references.local/
+
+# MCP config
+.mcp.json
