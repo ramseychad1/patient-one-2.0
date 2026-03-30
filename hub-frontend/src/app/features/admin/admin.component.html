@@ -63,48 +63,48 @@
         <div class="config-section">Enrollment</div>
         <div class="config-field"><label>Accepted sources</label>
           <div class="source-chips">
-            @for (s of config().accepted_sources || []; track s) {
+            @for (s of config().acceptedSources || []; track s) {
               <span class="source-chip">{{ s }}</span>
             }
           </div>
         </div>
-        <div class="config-field"><label>Consent method</label><span>{{ config().consent_method }}</span></div>
-        <div class="config-field"><label>MI SLA (business days)</label><span>{{ config().mi_sla_business_days }}</span></div>
+        <div class="config-field"><label>Consent method</label><span>{{ config().consentMethod }}</span></div>
+        <div class="config-field"><label>MI SLA (business days)</label><span>{{ config().miSlaBusinessDays }}</span></div>
 
         <div class="config-section">Workflow</div>
-        <label class="toggle-row"><span>Prior auth required</span><span class="bool-val" [class.yes]="config().prior_auth_required" [class.no]="!config().prior_auth_required">{{ config().prior_auth_required ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>eBV enabled</span><span class="bool-val" [class.yes]="config().ebv_enabled" [class.no]="!config().ebv_enabled">{{ config().ebv_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>eIV enabled</span><span class="bool-val" [class.yes]="config().eiv_enabled" [class.no]="!config().eiv_enabled">{{ config().eiv_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Copay assistance</span><span class="bool-val" [class.yes]="config().copay_assistance_enabled" [class.no]="!config().copay_assistance_enabled">{{ config().copay_assistance_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>PAP enabled</span><span class="bool-val" [class.yes]="config().pap_enabled" [class.no]="!config().pap_enabled">{{ config().pap_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Bridge supply</span><span class="bool-val" [class.yes]="config().bridge_supply_enabled" [class.no]="!config().bridge_supply_enabled">{{ config().bridge_supply_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Quick Start</span><span class="bool-val" [class.yes]="config().quick_start_enabled" [class.no]="!config().quick_start_enabled">{{ config().quick_start_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>REMS tracking</span><span class="bool-val" [class.yes]="config().rems_tracking_enabled" [class.no]="!config().rems_tracking_enabled">{{ config().rems_tracking_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Adherence program</span><span class="bool-val" [class.yes]="config().adherence_program_enabled" [class.no]="!config().adherence_program_enabled">{{ config().adherence_program_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Nurse education</span><span class="bool-val" [class.yes]="config().nurse_education_enabled" [class.no]="!config().nurse_education_enabled">{{ config().nurse_education_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Welcome kit</span><span class="bool-val" [class.yes]="config().welcome_kit_enabled" [class.no]="!config().welcome_kit_enabled">{{ config().welcome_kit_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Travel assistance</span><span class="bool-val" [class.yes]="config().travel_assistance_enabled" [class.no]="!config().travel_assistance_enabled">{{ config().travel_assistance_enabled ? '\u2713' : '\u2014' }}</span></label>
-        <label class="toggle-row"><span>Infusion site</span><span class="bool-val" [class.yes]="config().infusion_site_enabled" [class.no]="!config().infusion_site_enabled">{{ config().infusion_site_enabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Prior auth required</span><span class="bool-val" [class.yes]="config().priorAuthRequired" [class.no]="!config().priorAuthRequired">{{ config().priorAuthRequired ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>eBV enabled</span><span class="bool-val" [class.yes]="config().ebvEnabled" [class.no]="!config().ebvEnabled">{{ config().ebvEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>eIV enabled</span><span class="bool-val" [class.yes]="config().eivEnabled" [class.no]="!config().eivEnabled">{{ config().eivEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Copay assistance</span><span class="bool-val" [class.yes]="config().copayAssistanceEnabled" [class.no]="!config().copayAssistanceEnabled">{{ config().copayAssistanceEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>PAP enabled</span><span class="bool-val" [class.yes]="config().papEnabled" [class.no]="!config().papEnabled">{{ config().papEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Bridge supply</span><span class="bool-val" [class.yes]="config().bridgeSupplyEnabled" [class.no]="!config().bridgeSupplyEnabled">{{ config().bridgeSupplyEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Quick Start</span><span class="bool-val" [class.yes]="config().quickStartEnabled" [class.no]="!config().quickStartEnabled">{{ config().quickStartEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>REMS tracking</span><span class="bool-val" [class.yes]="config().remsTrackingEnabled" [class.no]="!config().remsTrackingEnabled">{{ config().remsTrackingEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Adherence program</span><span class="bool-val" [class.yes]="config().adherenceProgramEnabled" [class.no]="!config().adherenceProgramEnabled">{{ config().adherenceProgramEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Nurse education</span><span class="bool-val" [class.yes]="config().nurseEducationEnabled" [class.no]="!config().nurseEducationEnabled">{{ config().nurseEducationEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Welcome kit</span><span class="bool-val" [class.yes]="config().welcomeKitEnabled" [class.no]="!config().welcomeKitEnabled">{{ config().welcomeKitEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Travel assistance</span><span class="bool-val" [class.yes]="config().travelAssistanceEnabled" [class.no]="!config().travelAssistanceEnabled">{{ config().travelAssistanceEnabled ? '\u2713' : '\u2014' }}</span></label>
+        <label class="toggle-row"><span>Infusion site</span><span class="bool-val" [class.yes]="config().infusionSiteEnabled" [class.no]="!config().infusionSiteEnabled">{{ config().infusionSiteEnabled ? '\u2713' : '\u2014' }}</span></label>
 
         <div class="config-section">Financial</div>
-        <div class="config-field"><label>FPL threshold %</label><span>{{ config().fpl_threshold_pct }}</span></div>
-        <div class="config-field"><label>PAP approval duration (months)</label><span>{{ config().pap_approval_duration_months }}</span></div>
-        <div class="config-field"><label>PAP re-enrollment lead (days)</label><span>{{ config().pap_reenrollment_lead_days }}</span></div>
-        <div class="config-field"><label>Copay max benefit ($/year)</label><span>{{ config().copay_max_benefit_usd ?? 'No cap' }}</span></div>
-        <div class="config-field"><label>Bridge max duration (months)</label><span>{{ config().bridge_max_duration_months }}</span></div>
-        <div class="config-field"><label>Quick Start max duration (months)</label><span>{{ config().quick_start_max_duration_months }}</span></div>
+        <div class="config-field"><label>FPL threshold %</label><span>{{ config().fplThresholdPct }}</span></div>
+        <div class="config-field"><label>PAP approval duration (months)</label><span>{{ config().papApprovalDurationMonths }}</span></div>
+        <div class="config-field"><label>PAP re-enrollment lead (days)</label><span>{{ config().papReenrollmentLeadDays }}</span></div>
+        <div class="config-field"><label>Copay max benefit ($/year)</label><span>{{ config().copayMaxBenefitUsd ?? 'No cap' }}</span></div>
+        <div class="config-field"><label>Bridge max duration (months)</label><span>{{ config().bridgeMaxDurationMonths }}</span></div>
+        <div class="config-field"><label>Quick Start max duration (months)</label><span>{{ config().quickStartMaxDurationMonths }}</span></div>
 
         <div class="config-section">PA SLA</div>
-        <div class="config-field"><label>Submit SLA (business days)</label><span>{{ config().pa_submit_sla_business_days }}</span></div>
-        <div class="config-field"><label>Follow-up SLA (business days)</label><span>{{ config().pa_followup_sla_business_days }}</span></div>
-        <div class="config-field"><label>Appeal window (days)</label><span>{{ config().pa_appeal_window_days }}</span></div>
-        <div class="config-field"><label>Max appeal levels</label><span>{{ config().pa_max_appeal_levels }}</span></div>
-        <label class="toggle-row"><span>Auto-escalate on breach</span><span class="bool-val" [class.yes]="config().pa_auto_escalate" [class.no]="!config().pa_auto_escalate">{{ config().pa_auto_escalate ? '\u2713' : '\u2014' }}</span></label>
+        <div class="config-field"><label>Submit SLA (business days)</label><span>{{ config().paSubmitSlaBusinessDays }}</span></div>
+        <div class="config-field"><label>Follow-up SLA (business days)</label><span>{{ config().paFollowupSlaBusinessDays }}</span></div>
+        <div class="config-field"><label>Appeal window (days)</label><span>{{ config().paAppealWindowDays }}</span></div>
+        <div class="config-field"><label>Max appeal levels</label><span>{{ config().paMaxAppealLevels }}</span></div>
+        <label class="toggle-row"><span>Auto-escalate on breach</span><span class="bool-val" [class.yes]="config().paAutoEscalate" [class.no]="!config().paAutoEscalate">{{ config().paAutoEscalate ? '\u2713' : '\u2014' }}</span></label>
 
         <div class="config-section">SP &amp; Adherence</div>
-        <div class="config-field"><label>SP follow-up SLA (business days)</label><span>{{ config().sp_followup_sla_business_days }}</span></div>
-        <div class="config-field"><label>Check-in intervals (days)</label><span>{{ config().adherence_checkin_intervals_days?.join(' / ') }}</span></div>
-        <div class="config-field"><label>Refill reminder lead (days)</label><span>{{ config().refill_reminder_lead_days }}</span></div>
+        <div class="config-field"><label>SP follow-up SLA (business days)</label><span>{{ config().spFollowupSlaBusinessDays }}</span></div>
+        <div class="config-field"><label>Check-in intervals (days)</label><span>{{ config().adherenceCheckinIntervalsDays?.join(' / ') }}</span></div>
+        <div class="config-field"><label>Refill reminder lead (days)</label><span>{{ config().refillReminderLeadDays }}</span></div>
 
         <button class="save-btn" (click)="saveConfig()" [disabled]="saving()">
           {{ saving() ? 'Saving...' : 'Save changes' }}
