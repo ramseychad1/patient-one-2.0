@@ -1,5 +1,6 @@
 package com.hubaccess.domain.cases.actions;
 
+import com.hubaccess.domain.activity.CaseTaskRepository;
 import com.hubaccess.domain.activity.Interaction;
 import com.hubaccess.domain.activity.InteractionRepository;
 import com.hubaccess.domain.cases.HubCase;
@@ -33,6 +34,7 @@ public class ActionHandlerRegistry {
     private final ActionService actionService;
     private final InteractionRepository interactionRepo;
     private final EnrollmentRecordRepository enrollmentRepo;
+    private final CaseTaskRepository caseTaskRepo;
     private final InsurancePlanRepository insurancePlanRepo;
     private final BenefitsVerificationRepository bvRepo;
     private final FinancialAssistanceService faService;
@@ -79,6 +81,15 @@ public class ActionHandlerRegistry {
                 er.setMiResolvedBy(user.id());
                 enrollmentRepo.save(er);
             });
+            // Complete all RESOLVE_MI tasks for this case
+            caseTaskRepo.findByCaseId(hc.getId()).stream()
+                    .filter(t -> "RESOLVE_MI".equals(t.getTaskType()) && "OPEN".equals(t.getStatus()))
+                    .forEach(t -> {
+                        t.setStatus("COMPLETED");
+                        t.setCompletedAt(OffsetDateTime.now());
+                        t.setCompletedBy(user.id());
+                        caseTaskRepo.save(t);
+                    });
             return null;
         }
         @Override public String getNextState(HubCase hc) { return "CONSENT_PENDING"; }
