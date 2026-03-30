@@ -115,7 +115,7 @@
   <div class="users-section">
     <div class="users-header">
       <span class="users-title">Users</span>
-      <button class="invite-btn" (click)="showInviteModal.set(true)">+ Invite user</button>
+      <button class="invite-btn" (click)="openInviteWizard()">+ Invite user</button>
     </div>
     <table class="users-table">
       <thead>
@@ -171,15 +171,23 @@
   </div>
 }
 
-<!-- Edit User Modal -->
+<!-- Edit User Modal (Tabbed) -->
 @if (showEditUserModal()) {
   <div class="modal-backdrop" (click)="showEditUserModal.set(false)">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal-head"><span class="modal-title">Edit User</span><span class="modal-close" (click)="showEditUserModal.set(false)">&times;</span></div>
+    <div class="modal modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">Edit User</span>
+        <span class="modal-close" (click)="showEditUserModal.set(false)">&times;</span>
+      </div>
+      <div class="modal-tabs">
+        <div class="modal-tab" [class.active]="editUserTab() === 'details'" (click)="editUserTab.set('details')">Details</div>
+        <div class="modal-tab" [class.active]="editUserTab() === 'programs'" (click)="editUserTab.set('programs')">Program Access</div>
+      </div>
       <div class="modal-body">
         @if (editUserSaved()) {
           <div class="invite-success">User updated successfully.</div>
-        } @else {
+        } @else if (editUserTab() === 'details') {
+          <!-- Details Tab -->
           <div class="form-row-modal">
             <div class="form-group"><label class="form-label">First name</label><input class="form-input" [(ngModel)]="editUser.firstName"></div>
             <div class="form-group"><label class="form-label">Last name</label><input class="form-input" [(ngModel)]="editUser.lastName"></div>
@@ -202,33 +210,200 @@
           </div>
           <div class="form-group"><label class="form-label">New password (leave blank to keep current)</label><input class="form-input" type="password" [(ngModel)]="editUser.password" placeholder="Min 6 chars"></div>
           <button class="save-btn" (click)="saveEditUser()">Save changes</button>
+        } @else {
+          <!-- Program Access Tab -->
+          @if (editUser.role === 'HUB_ADMIN' || editUser.isHubAdmin) {
+            <div class="admin-program-msg">Hub Admins have access to all programs.</div>
+          } @else {
+            @if (editUserLoadingPrograms()) {
+              <div class="assignment-loading">Loading program assignments...</div>
+            } @else {
+              @if (editUserPrograms().length === 0) {
+                <div class="assignment-empty">No program assignments yet.</div>
+              } @else {
+                <div class="program-assign-list">
+                  @for (a of editUserPrograms(); track a.programId) {
+                    <div class="program-assign-item">
+                      <div class="program-assign-header">
+                        <div style="flex: 1; min-width: 0;">
+                          <div class="program-assign-name">{{ a.programName }}</div>
+                          <div class="program-assign-mfr">{{ a.manufacturerName }}</div>
+                        </div>
+                        <button class="remove-assignment-btn" (click)="removeUserAssignment(a)" title="Remove from program">&times;</button>
+                      </div>
+                      <div class="program-assign-perms">
+                        <label class="perm-toggle"><input type="checkbox" [checked]="a.canCreateCases" (change)="a.canCreateCases = !a.canCreateCases; updatePermission(a, 'canCreateCases', a.canCreateCases)"><span>Create Cases</span></label>
+                        <label class="perm-toggle"><input type="checkbox" [checked]="a.canEditCases" (change)="a.canEditCases = !a.canEditCases; updatePermission(a, 'canEditCases', a.canEditCases)"><span>Edit Cases</span></label>
+                        <label class="perm-toggle"><input type="checkbox" [checked]="a.canCloseCases" (change)="a.canCloseCases = !a.canCloseCases; updatePermission(a, 'canCloseCases', a.canCloseCases)"><span>Close Cases</span></label>
+                        <label class="perm-toggle"><input type="checkbox" [checked]="a.canViewFinancials" (change)="a.canViewFinancials = !a.canViewFinancials; updatePermission(a, 'canViewFinancials', a.canViewFinancials)"><span>View Financials</span></label>
+                        <label class="perm-toggle"><input type="checkbox" [checked]="a.canPerformActions" (change)="a.canPerformActions = !a.canPerformActions; updatePermission(a, 'canPerformActions', a.canPerformActions)"><span>Perform Actions</span></label>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Add assignment inline -->
+              @if (!showAddAssignment()) {
+                <button class="assign-btn" style="margin-top: 12px;" (click)="showAddAssignment.set(true); addAssignmentProgramId = ''; addAssignmentPerms = { canCreateCases: true, canEditCases: true, canCloseCases: false, canViewFinancials: true, canPerformActions: true }">+ Assign to program</button>
+              } @else {
+                <div class="add-assignment-form">
+                  <div class="form-group">
+                    <label class="form-label">Program</label>
+                    <select class="form-input" [(ngModel)]="addAssignmentProgramId">
+                      <option value="" disabled>Select a program</option>
+                      @for (p of unassignedProgramsForEdit(); track p.id) {
+                        <option [value]="p.id">{{ p.manufacturerName ? p.manufacturerName + ' — ' : '' }}{{ p.name || p.drugBrandName }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Permissions</label>
+                    <div class="perm-checkboxes">
+                      <label class="perm-toggle"><input type="checkbox" [(ngModel)]="addAssignmentPerms.canCreateCases"><span>Create</span></label>
+                      <label class="perm-toggle"><input type="checkbox" [(ngModel)]="addAssignmentPerms.canEditCases"><span>Edit</span></label>
+                      <label class="perm-toggle"><input type="checkbox" [(ngModel)]="addAssignmentPerms.canCloseCases"><span>Close</span></label>
+                      <label class="perm-toggle"><input type="checkbox" [(ngModel)]="addAssignmentPerms.canViewFinancials"><span>Financials</span></label>
+                      <label class="perm-toggle"><input type="checkbox" [(ngModel)]="addAssignmentPerms.canPerformActions"><span>Actions</span></label>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <button class="save-btn" style="flex: 1; margin-top: 0;" (click)="submitAddAssignment()" [disabled]="!addAssignmentProgramId">Assign</button>
+                    <button class="btn-secondary" style="margin-top: 0;" (click)="showAddAssignment.set(false)">Cancel</button>
+                  </div>
+                </div>
+              }
+            }
+          }
         }
       </div>
     </div>
   </div>
 }
 
-<!-- Invite Modal -->
+<!-- Invite Modal (3-step wizard) -->
 @if (showInviteModal()) {
   <div class="modal-backdrop" (click)="showInviteModal.set(false)">
-    <div class="modal" (click)="$event.stopPropagation()">
-      <div class="modal-head"><span class="modal-title">Invite User</span><span class="modal-close" (click)="showInviteModal.set(false)">&times;</span></div>
+    <div class="modal modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">Invite User</span>
+        <span class="modal-close" (click)="showInviteModal.set(false)">&times;</span>
+      </div>
+      <div class="wizard-steps">
+        <span class="wizard-step" [class.active]="inviteStep() === 1" [class.done]="inviteStep() > 1">1. User Info</span>
+        <span class="wizard-step" [class.active]="inviteStep() === 2" [class.done]="inviteStep() > 2">2. Programs</span>
+        <span class="wizard-step" [class.active]="inviteStep() === 3">3. Confirmation</span>
+      </div>
       <div class="modal-body">
-        @if (inviteResult()) {
-          <div class="invite-success">
-            User created. Temp password: <code>{{ inviteResult().tempPassword }}</code>
+
+        <!-- Step 1: User Info -->
+        @if (inviteStep() === 1) {
+          <div class="form-group"><label class="form-label">Email</label><input class="form-input" [(ngModel)]="inviteForm.email"></div>
+          <div class="form-row-modal">
+            <div class="form-group"><label class="form-label">First name</label><input class="form-input" [(ngModel)]="inviteForm.firstName"></div>
+            <div class="form-group"><label class="form-label">Last name</label><input class="form-input" [(ngModel)]="inviteForm.lastName"></div>
           </div>
-        } @else {
-          <div class="form-group"><label class="form-label">Email</label><input class="form-input" [(ngModel)]="inviteEmail"></div>
-          <div class="form-group"><label class="form-label">First name</label><input class="form-input" [(ngModel)]="inviteFirstName"></div>
-          <div class="form-group"><label class="form-label">Last name</label><input class="form-input" [(ngModel)]="inviteLastName"></div>
           <div class="form-group"><label class="form-label">Role</label>
-            <select class="form-input" [(ngModel)]="inviteRole">
+            <select class="form-input" [(ngModel)]="inviteForm.role">
               <option value="CASE_MANAGER">Case Manager</option>
               <option value="HUB_ADMIN">Hub Admin</option>
+              <option value="SUPERVISOR">Supervisor</option>
+              <option value="REIMBURSEMENT_COORDINATOR">Reimbursement Coordinator</option>
+              <option value="CARE_COORDINATOR">Care Coordinator</option>
             </select>
           </div>
-          <button class="save-btn" (click)="inviteUser()">Send invite</button>
+        }
+
+        <!-- Step 2: Program Assignments (Case Manager / non-admin roles) -->
+        @if (inviteStep() === 2) {
+          <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">
+            Select programs to assign <strong>{{ inviteForm.firstName || 'this user' }}</strong> to, and configure their permissions.
+          </div>
+          <div class="program-assign-list">
+            @for (a of inviteAssignments; track a.programId) {
+              <div class="program-assign-item">
+                <div class="program-assign-header" (click)="a.checked = !a.checked">
+                  <input type="checkbox" [(ngModel)]="a.checked" (click)="$event.stopPropagation()">
+                  <div style="flex: 1; min-width: 0;">
+                    <div class="program-assign-name">{{ a.programName }}</div>
+                    <div class="program-assign-mfr">{{ a.manufacturerName }}</div>
+                  </div>
+                  @if (a.drugBrandName) {
+                    <span class="program-assign-drug">{{ a.drugBrandName }}</span>
+                  }
+                </div>
+                @if (a.checked) {
+                  <div class="program-assign-perms">
+                    <label class="perm-toggle"><input type="checkbox" [(ngModel)]="a.canCreateCases"><span>Create Cases</span></label>
+                    <label class="perm-toggle"><input type="checkbox" [(ngModel)]="a.canEditCases"><span>Edit Cases</span></label>
+                    <label class="perm-toggle"><input type="checkbox" [(ngModel)]="a.canCloseCases"><span>Close Cases</span></label>
+                    <label class="perm-toggle"><input type="checkbox" [(ngModel)]="a.canViewFinancials"><span>View Financials</span></label>
+                    <label class="perm-toggle"><input type="checkbox" [(ngModel)]="a.canPerformActions"><span>Perform Actions</span></label>
+                  </div>
+                }
+              </div>
+            }
+            @if (inviteAssignments.length === 0) {
+              <div class="assignment-empty">No programs available.</div>
+            }
+          </div>
+        }
+
+        <!-- Step 3: Confirmation -->
+        @if (inviteStep() === 3) {
+          <div class="confirm-section">
+            <div class="confirm-label">User</div>
+            <div class="confirm-value">{{ inviteResult()?.firstName }} {{ inviteResult()?.lastName }}</div>
+          </div>
+          <div class="confirm-section">
+            <div class="confirm-label">Email</div>
+            <div class="confirm-value">{{ inviteResult()?.email }}</div>
+          </div>
+          <div class="confirm-section">
+            <div class="confirm-label">Role</div>
+            <div class="confirm-value">{{ inviteForm.role }}</div>
+          </div>
+          @if (checkedAssignments().length > 0) {
+            <div class="confirm-section">
+              <div class="confirm-label">Assigned Programs</div>
+              @for (a of checkedAssignments(); track a.programId) {
+                <div class="confirm-value" style="font-size: 13px;">{{ a.programName }}</div>
+              }
+            </div>
+          }
+          <div class="confirm-section">
+            <div class="confirm-label">Temporary Password</div>
+            <div class="password-box">
+              <span class="password-value">{{ inviteResult()?.tempPassword }}</span>
+              <button class="copy-btn" (click)="copyPassword()">Copy</button>
+            </div>
+          </div>
+          <div class="confirm-warning">
+            Save this password now. It will not be shown again. The user should change it after their first login.
+          </div>
+        }
+      </div>
+
+      <!-- Wizard Footer -->
+      <div class="wizard-footer">
+        @if (inviteStep() === 1) {
+          <button class="btn-secondary" (click)="showInviteModal.set(false)">Cancel</button>
+          <button class="save-btn wizard-next-btn" (click)="inviteNext()" [disabled]="!inviteForm.email || !inviteForm.firstName || !inviteForm.lastName || inviteSaving()">
+            {{ inviteSaving() ? 'Creating...' : (inviteForm.role === 'HUB_ADMIN' ? 'Create User' : 'Next: Programs') }}
+          </button>
+        }
+        @if (inviteStep() === 2) {
+          <button class="btn-secondary" (click)="inviteBack()">Back</button>
+          <div class="wizard-footer-right">
+            <button class="btn-secondary" (click)="submitInvite()" [disabled]="inviteSaving()">Skip</button>
+            <button class="save-btn wizard-next-btn" (click)="inviteNext()" [disabled]="inviteSaving()">
+              {{ inviteSaving() ? 'Creating...' : 'Create User' }}
+            </button>
+          </div>
+        }
+        @if (inviteStep() === 3) {
+          <div></div>
+          <button class="save-btn wizard-next-btn" (click)="showInviteModal.set(false)">Done</button>
         }
       </div>
     </div>

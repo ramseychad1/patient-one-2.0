@@ -17,6 +17,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.transaction.Transactional;
 import java.time.OffsetDateTime;
 import java.util.*;
 
@@ -145,26 +146,28 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 
+    @SuppressWarnings("unchecked")
+    @Transactional
     @PostMapping("/users/invite")
     public ResponseEntity<ApiResponse<Map<String, Object>>> inviteUser(
-            @RequestBody Map<String, String> body, Authentication auth) {
+            @RequestBody Map<String, Object> body, Authentication auth) {
         AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
         if (!user.roles().contains("HUB_ADMIN")) {
             throw new org.springframework.security.access.AccessDeniedException("HubAdmin only");
         }
         String tempPassword = UUID.randomUUID().toString().substring(0, 12);
         HubUser newUser = HubUser.builder()
-                .email(body.get("email"))
+                .email((String) body.get("email"))
                 .passwordHash(passwordEncoder.encode(tempPassword))
-                .firstName(body.get("firstName"))
-                .lastName(body.get("lastName"))
+                .firstName((String) body.get("firstName"))
+                .lastName((String) body.get("lastName"))
                 .isHubAdmin(false)
                 .isActive(true)
                 .createdBy(user.id())
                 .build();
         userRepo.save(newUser);
 
-        String roleName = body.getOrDefault("role", "CASE_MANAGER");
+        String roleName = body.getOrDefault("role", "CASE_MANAGER").toString();
         roleRepo.findByName(roleName).ifPresent(role ->
                 userRoleRepo.save(UserRole.builder()
                         .userId(newUser.getId())
@@ -172,10 +175,41 @@ public class AdminController {
                         .assignedBy(user.id())
                         .build()));
 
+        // Process optional program assignments
+        List<Map<String, Object>> savedAssignments = new ArrayList<>();
+        List<Map<String, Object>> assignments = (List<Map<String, Object>>) body.get("programAssignments");
+        if (assignments != null && !assignments.isEmpty()) {
+            for (Map<String, Object> a : assignments) {
+                UserProgramAssignment assignment = UserProgramAssignment.builder()
+                        .userId(newUser.getId())
+                        .programId(UUID.fromString((String) a.get("programId")))
+                        .canCreateCases(a.get("canCreateCases") != null ? (Boolean) a.get("canCreateCases") : true)
+                        .canEditCases(a.get("canEditCases") != null ? (Boolean) a.get("canEditCases") : true)
+                        .canCloseCases(a.get("canCloseCases") != null ? (Boolean) a.get("canCloseCases") : false)
+                        .canViewFinancials(a.get("canViewFinancials") != null ? (Boolean) a.get("canViewFinancials") : true)
+                        .canPerformActions(a.get("canPerformActions") != null ? (Boolean) a.get("canPerformActions") : true)
+                        .assignedBy(user.id())
+                        .build();
+                assignmentRepo.save(assignment);
+
+                Map<String, Object> savedMap = new LinkedHashMap<>();
+                savedMap.put("id", assignment.getId());
+                savedMap.put("programId", assignment.getProgramId());
+                savedMap.put("canCreateCases", assignment.getCanCreateCases());
+                savedMap.put("canEditCases", assignment.getCanEditCases());
+                savedMap.put("canCloseCases", assignment.getCanCloseCases());
+                savedMap.put("canViewFinancials", assignment.getCanViewFinancials());
+                savedMap.put("canPerformActions", assignment.getCanPerformActions());
+                savedMap.put("assignedAt", assignment.getAssignedAt());
+                savedAssignments.add(savedMap);
+            }
+        }
+
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("id", newUser.getId());
         result.put("email", newUser.getEmail());
         result.put("tempPassword", tempPassword);
+        result.put("programAssignments", savedAssignments);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(result));
     }
 
@@ -237,6 +271,60 @@ public class AdminController {
         result.put("id", target.getId());
         result.put("email", target.getEmail());
         result.put("updated", true);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
+    @GetMapping("/users/{userId}/programs")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getUserPrograms(
+            @PathVariable UUID userId, Authentication auth) {
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+        if (!user.roles().contains("HUB_ADMIN")) {
+            throw new org.springframework.security.access.AccessDeniedException("HubAdmin only");
+        }
+
+        HubUser target = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        // Hub Admin users don't have assignment rows
+        if (Boolean.TRUE.equals(target.getIsHubAdmin())) {
+            return ResponseEntity.ok(ApiResponse.ok(Collections.emptyList()));
+        }
+
+        List<UserProgramAssignment> assignments = assignmentRepo.findByUserId(userId);
+        List<Map<String, Object>> result = new ArrayList<>();
+
+        for (UserProgramAssignment a : assignments) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("programId", a.getProgramId());
+
+            String programName = null;
+            String drugBrandName = null;
+            String manufacturerName = null;
+
+            Optional<Program> programOpt = programRepo.findById(a.getProgramId());
+            if (programOpt.isPresent()) {
+                Program program = programOpt.get();
+                programName = program.getName();
+                drugBrandName = program.getDrugBrandName();
+                Optional<Manufacturer> mfrOpt = manufacturerRepo.findById(program.getManufacturerId());
+                if (mfrOpt.isPresent()) {
+                    manufacturerName = mfrOpt.get().getName();
+                }
+            }
+
+            map.put("programName", programName);
+            map.put("drugBrandName", drugBrandName);
+            map.put("manufacturerName", manufacturerName);
+            map.put("canCreateCases", a.getCanCreateCases());
+            map.put("canEditCases", a.getCanEditCases());
+            map.put("canCloseCases", a.getCanCloseCases());
+            map.put("canViewFinancials", a.getCanViewFinancials());
+            map.put("canPerformActions", a.getCanPerformActions());
+            map.put("assignedAt", a.getAssignedAt());
+            map.put("expiresAt", a.getExpiresAt());
+            result.add(map);
+        }
+
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
 }

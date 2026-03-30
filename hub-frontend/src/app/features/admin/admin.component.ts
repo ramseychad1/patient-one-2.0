@@ -24,17 +24,29 @@ export class AdminComponent implements OnInit {
   saving = signal(false);
   saveSuccess = signal(false);
   showInviteModal = signal(false);
-  inviteEmail = '';
-  inviteRole = 'CASE_MANAGER';
-  inviteFirstName = '';
-  inviteLastName = '';
+
+  // Invite wizard state
+  inviteStep = signal(1);
+  inviteForm: any = { email: '', firstName: '', lastName: '', role: 'CASE_MANAGER' };
+  inviteAssignments: any[] = [];
   inviteResult = signal<any>(null);
+  inviteSaving = signal(false);
+  allPrograms = signal<any[]>([]);
+
   editingPasswordUserId = signal<string | null>(null);
   newPassword = '';
   passwordSaved = signal<string | null>(null);
   showEditUserModal = signal(false);
   editUser: any = {};
   editUserSaved = signal(false);
+
+  // Edit user tabs & program access
+  editUserTab = signal<'details' | 'programs'>('details');
+  editUserPrograms = signal<any[]>([]);
+  editUserLoadingPrograms = signal(false);
+  showAddAssignment = signal(false);
+  addAssignmentProgramId = '';
+  addAssignmentPerms: any = { canCreateCases: true, canEditCases: true, canCloseCases: false, canViewFinancials: true, canPerformActions: true };
 
   // Manufacturer modal
   showMfrModal = signal(false);
@@ -63,9 +75,6 @@ export class AdminComponent implements OnInit {
   assignPermissions: any = { canView: true, canEdit: false, canManage: false };
 
   isAdmin = () => this.auth.user()?.roles?.includes('HUB_ADMIN') ?? false;
-
-  // All programs across all manufacturers for assignment dropdown
-  allPrograms = signal<any[]>([]);
 
   ngOnInit() {
     this.api.getManufacturers().subscribe(data => this.manufacturers.set(data));
@@ -96,13 +105,63 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  inviteUser() {
-    this.api.inviteUser({ email: this.inviteEmail, firstName: this.inviteFirstName, lastName: this.inviteLastName, role: this.inviteRole }).subscribe({
+  // --- Invite Wizard ---
+
+  openInviteWizard() {
+    this.inviteStep.set(1);
+    this.inviteForm = { email: '', firstName: '', lastName: '', role: 'CASE_MANAGER' };
+    this.inviteAssignments = [];
+    this.inviteResult.set(null);
+    this.showInviteModal.set(true);
+    // Load all programs for step 2
+    this.api.getMyPrograms().subscribe(p => {
+      this.allPrograms.set(p);
+      this.inviteAssignments = p.map((prog: any) => ({
+        programId: prog.id, programName: prog.name || prog.drugBrandName, manufacturerName: prog.manufacturerName,
+        drugBrandName: prog.drugBrandName, checked: false,
+        canCreateCases: true, canEditCases: true, canCloseCases: false, canViewFinancials: true, canPerformActions: true
+      }));
+    });
+  }
+
+  inviteNext() {
+    if (this.inviteStep() === 1) {
+      if (this.inviteForm.role === 'HUB_ADMIN') {
+        this.submitInvite(); // Skip step 2 for admins
+      } else {
+        this.inviteStep.set(2);
+      }
+    } else if (this.inviteStep() === 2) {
+      this.submitInvite();
+    }
+  }
+
+  inviteBack() { this.inviteStep.update(s => Math.max(1, s - 1)); }
+
+  submitInvite() {
+    this.inviteSaving.set(true);
+    const selected = this.inviteAssignments.filter((a: any) => a.checked).map((a: any) => ({
+      programId: a.programId, canCreateCases: a.canCreateCases, canEditCases: a.canEditCases,
+      canCloseCases: a.canCloseCases, canViewFinancials: a.canViewFinancials, canPerformActions: a.canPerformActions
+    }));
+    const body: any = { ...this.inviteForm, programAssignments: selected };
+    this.api.inviteUserWithAssignments(body).subscribe({
       next: (data) => {
         this.inviteResult.set(data);
+        this.inviteStep.set(3);
+        this.inviteSaving.set(false);
         this.api.getUsers().subscribe(u => this.users.set(u));
-      }
+      },
+      error: () => this.inviteSaving.set(false)
     });
+  }
+
+  copyPassword() {
+    navigator.clipboard.writeText(this.inviteResult()?.tempPassword || '');
+  }
+
+  checkedAssignments(): any[] {
+    return this.inviteAssignments.filter((a: any) => a.checked);
   }
 
   startEditPassword(userId: string) {
@@ -128,10 +187,49 @@ export class AdminComponent implements OnInit {
     this.newPassword = '';
   }
 
+  // --- Edit User (tabbed) ---
+
   openEditUser(u: any) {
-    this.editUser = { id: u.id, firstName: u.firstName, lastName: u.lastName, role: u.roles?.[0] || 'CASE_MANAGER', isActive: u.isActive, password: '' };
+    this.editUser = { id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, role: u.roles?.[0] || 'CASE_MANAGER', isActive: u.isActive, isHubAdmin: u.isHubAdmin, password: '' };
+    this.editUserTab.set('details');
     this.editUserSaved.set(false);
     this.showEditUserModal.set(true);
+    this.loadEditUserPrograms(u.id);
+  }
+
+  loadEditUserPrograms(userId: string) {
+    this.editUserLoadingPrograms.set(true);
+    this.api.getUserPrograms(userId).subscribe({
+      next: (data) => { this.editUserPrograms.set(data); this.editUserLoadingPrograms.set(false); },
+      error: () => this.editUserLoadingPrograms.set(false)
+    });
+  }
+
+  updatePermission(assignment: any, field: string, value: boolean) {
+    const body: any = {};
+    body[field] = value;
+    this.api.updateProgramAssignment(assignment.programId, this.editUser.id, body).subscribe();
+  }
+
+  removeUserAssignment(assignment: any) {
+    if (!confirm(`Remove ${this.editUser.firstName} from ${assignment.programName}?`)) return;
+    this.api.removeUserFromProgram(assignment.programId, this.editUser.id).subscribe(() => {
+      this.loadEditUserPrograms(this.editUser.id);
+    });
+  }
+
+  submitAddAssignment() {
+    this.api.assignUserToProgram(this.addAssignmentProgramId, {
+      userId: this.editUser.id, ...this.addAssignmentPerms
+    }).subscribe(() => {
+      this.showAddAssignment.set(false);
+      this.loadEditUserPrograms(this.editUser.id);
+    });
+  }
+
+  unassignedProgramsForEdit(): any[] {
+    const assigned = new Set(this.editUserPrograms().map((a: any) => a.programId));
+    return this.allPrograms().filter((p: any) => !assigned.has(p.id));
   }
 
   saveEditUser() {
@@ -330,17 +428,11 @@ export class AdminComponent implements OnInit {
 
   private loadUserAssignments(userId: string) {
     this.loadingAssignments.set(true);
-    // Load all programs to build the list, then check assignments
-    // We load assignments for all programs and filter by user
-    this.loadingAssignments.set(true);
     this.userProgramAssignments.set([]);
 
     // Build the flat program list from manufacturers
     const mfrs = this.manufacturers();
-    const programFetches: any[] = [];
-    let loadedPrograms: any[] = [];
 
-    // Load all manufacturer details to get programs
     let remaining = mfrs.length;
     if (remaining === 0) {
       this.loadingAssignments.set(false);

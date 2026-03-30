@@ -102,10 +102,12 @@
 .required { color: var(--danger); }
 .form-error { background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: var(--radius-md); padding: 10px 14px; font-size: 12px; color: var(--danger); margin-bottom: 12px; }
 
-/* Wizard */
-.wizard-steps { display: flex; align-items: center; gap: 6px; margin-left: 16px; }
-.wizard-step { font-size: 11px; font-weight: 500; color: var(--text-tertiary); }
+/* Wizard (program wizard - in modal head) */
+.wizard-steps { display: flex; gap: 8px; padding: 0 20px 12px; border-bottom: 1px solid var(--border); }
+.modal-head .wizard-steps { padding: 0; border-bottom: none; margin-left: 16px; }
+.wizard-step { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
 .wizard-step.active { color: var(--teal); font-weight: 600; }
+.wizard-step.done { color: var(--text-secondary); }
 .wizard-step-divider { font-size: 11px; color: var(--text-tertiary); }
 .wizard-body { flex: 1; overflow-y: auto; }
 .wizard-config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
@@ -153,3 +155,37 @@
 .source-checkboxes { display: flex; gap: 16px; padding: 4px 0; }
 .source-check { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); cursor: pointer; }
 .source-check input { width: 14px; height: 14px; accent-color: var(--teal); }
+
+/* Program assignment list in wizard */
+.program-assign-list { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; }
+.program-assign-item { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+.program-assign-header { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; }
+.program-assign-header input { width: 16px; height: 16px; accent-color: var(--teal); }
+.program-assign-name { font-size: 13px; font-weight: 500; }
+.program-assign-mfr { font-size: 11px; color: var(--text-tertiary); }
+.program-assign-drug { font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: var(--radius-pill); background: var(--teal-light); color: var(--teal); margin-left: auto; }
+.program-assign-perms { padding: 8px 12px 12px 40px; border-top: 1px solid var(--border); background: var(--surface-section); }
+
+/* Tabs */
+.modal-tabs { display: flex; border-bottom: 1px solid var(--border); }
+.modal-tab { padding: 10px 20px; font-size: 13px; font-weight: 500; color: var(--text-tertiary); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.12s; }
+.modal-tab:hover { color: var(--text-primary); }
+.modal-tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+/* Password display */
+.password-box { display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--warm-black); border-radius: var(--radius-md); margin: 12px 0; }
+.password-value { font-family: monospace; font-size: 16px; color: white; flex: 1; letter-spacing: 0.05em; }
+.copy-btn { padding: 4px 10px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius-sm); color: white; font-size: 11px; font-weight: 600; cursor: pointer; font-family: var(--font); }
+.copy-btn:hover { background: rgba(255,255,255,0.2); }
+
+/* Confirmation summary */
+.confirm-section { margin-bottom: 16px; }
+.confirm-label { font-size: 11px; font-weight: 600; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.confirm-value { font-size: 14px; color: var(--text-primary); font-weight: 500; }
+.confirm-warning { font-size: 12px; color: var(--warn); background: var(--warn-bg); padding: 10px 12px; border-radius: var(--radius-md); margin: 12px 0; }
+
+/* Inline add assignment */
+.add-assignment-form { padding: 12px; border: 1px dashed var(--border-strong); border-radius: var(--radius-md); margin-top: 8px; }
+
+/* Hub admin message */
+.admin-program-msg { font-size: 13px; color: var(--text-secondary); padding: 16px 0; }

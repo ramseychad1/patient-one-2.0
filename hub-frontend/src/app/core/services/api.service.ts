@@ -111,4 +111,16 @@ export class ApiService {
   setActiveProgram(programId: string): Observable<any> {
     return this.http.post<ApiResponse<any>>(`${this.baseUrl}/users/me/active-program`, { programId }).pipe(map(r => r.data));
   }
+
+  getUserPrograms(userId: string): Observable<any[]> {
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/users/${userId}/programs`).pipe(map(r => r.data));
+  }
+
+  inviteUserWithAssignments(body: any): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/users/invite`, body).pipe(map(r => r.data));
+  }
+
+  updateProgramAssignment(programId: string, userId: string, body: any): Observable<any> {
+    return this.http.put<ApiResponse<any>>(`${this.baseUrl}/programs/${programId}/users/${userId}`, body).pipe(map(r => r.data));
+  }
 }
