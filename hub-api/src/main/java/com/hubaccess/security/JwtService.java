@@ -43,6 +43,22 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateAccessTokenWithActiveProgram(UUID userId, String email,
+                                                       List<String> roles, List<UUID> programIds,
+                                                       UUID activeProgramId) {
+        Instant now = Instant.now();
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("email", email)
+                .claim("roles", roles)
+                .claim("programs", programIds.stream().map(UUID::toString).toList())
+                .claim("activeProgramId", activeProgramId.toString())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(accessTokenExpiryMinutes, ChronoUnit.MINUTES)))
+                .signWith(signingKey)
+                .compact();
+    }
+
     public String generateRefreshToken(UUID userId) {
         Instant now = Instant.now();
         return Jwts.builder()

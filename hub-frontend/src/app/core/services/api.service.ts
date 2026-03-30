@@ -75,4 +75,40 @@ export class ApiService {
   updateUser(userId: string, body: any): Observable<any> {
     return this.http.put<ApiResponse<any>>(`${this.baseUrl}/users/${userId}`, body).pipe(map(r => r.data));
   }
+
+  // Manufacturer CRUD
+  createManufacturer(body: any): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/manufacturers`, body).pipe(map(r => r.data));
+  }
+
+  updateManufacturer(id: string, body: any): Observable<any> {
+    return this.http.put<ApiResponse<any>>(`${this.baseUrl}/manufacturers/${id}`, body).pipe(map(r => r.data));
+  }
+
+  // Program CRUD
+  createProgram(manufacturerId: string, body: any): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/manufacturers/${manufacturerId}/programs`, body).pipe(map(r => r.data));
+  }
+
+  // User-Program assignments
+  getProgramUsers(programId: string): Observable<any[]> {
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/programs/${programId}/users`).pipe(map(r => r.data));
+  }
+
+  assignUserToProgram(programId: string, body: any): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/programs/${programId}/users`, body).pipe(map(r => r.data));
+  }
+
+  removeUserFromProgram(programId: string, userId: string): Observable<any> {
+    return this.http.delete<any>(`${this.baseUrl}/programs/${programId}/users/${userId}`);
+  }
+
+  // Program switcher
+  getMyPrograms(): Observable<any[]> {
+    return this.http.get<ApiResponse<any[]>>(`${this.baseUrl}/users/me/programs`).pipe(map(r => r.data));
+  }
+
+  setActiveProgram(programId: string): Observable<any> {
+    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/users/me/active-program`, { programId }).pipe(map(r => r.data));
+  }
 }

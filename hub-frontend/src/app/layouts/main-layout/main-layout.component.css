@@ -28,6 +28,24 @@
 .nav-signout { font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; text-decoration: none; background: none; border: none; padding: 0; font-family: var(--font); }
 .nav-signout:hover { color: var(--brand); text-decoration: none; }
 
+/* Program switcher */
+.program-switcher-wrapper { position: relative; }
+.program-switcher-pill { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-pill); padding: 4px 10px 4px 8px; cursor: pointer; transition: background 0.15s; }
+.program-switcher-pill:hover { background: rgba(255,255,255,0.13); }
+.program-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.dot-teal { background: var(--teal); }
+.dot-blue { background: var(--blue); }
+.program-pill-name { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); }
+.program-pill-caret { font-size: 10px; color: rgba(255,255,255,0.5); }
+.program-switcher-dropdown { position: absolute; top: 100%; left: 0; margin-top: 6px; background: var(--surface-card); border: 1px solid var(--border); border-radius: var(--radius-lg); width: 280px; box-shadow: 0 12px 40px rgba(0,0,0,0.15); z-index: 100; overflow: hidden; }
+.program-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; transition: background 0.1s; }
+.program-option:hover { background: var(--surface-section); }
+.program-option.active { background: var(--teal-light); }
+.program-option-info { flex: 1; }
+.program-option-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.program-option-mfr { font-size: 11px; color: var(--text-tertiary); margin-top: 1px; }
+.program-check { color: var(--teal); font-weight: 600; font-size: 14px; }
+
 /* Scenario switcher */
 .scenario-wrapper { position: relative; }
 .topbar-scenario { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-pill); padding: 3px 10px 3px 6px; cursor: pointer; transition: background 0.15s; }

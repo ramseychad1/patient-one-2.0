@@ -4,7 +4,31 @@
     <span class="topbar-logo-name">Hub<span>Access</span></span>
   </a>
   <div class="topbar-divider"></div>
-  <span class="topbar-title">Meridian Therapeutics · Velarix Access Program</span>
+  @if (showProgramSwitcher()) {
+    <div class="program-switcher-wrapper">
+      <div class="program-switcher-pill" (click)="programSwitcherOpen = !programSwitcherOpen">
+        <div class="program-dot" [ngClass]="getProgramDotClass(0)"></div>
+        <span class="program-pill-name">{{ activeProgram()?.drugBrandName || activeProgram()?.name || 'Select program' }}</span>
+        <span class="program-pill-caret">▾</span>
+      </div>
+      @if (programSwitcherOpen) {
+        <div class="program-switcher-dropdown">
+          @for (p of myPrograms(); track p.id; let i = $index) {
+            <div class="program-option" [class.active]="activeProgram()?.id === p.id" (click)="switchProgram(p)">
+              <div class="program-dot" [ngClass]="getProgramDotClass(i)"></div>
+              <div class="program-option-info">
+                <div class="program-option-name">{{ p.drugBrandName || p.name }}</div>
+                <div class="program-option-mfr">{{ p.manufacturerName }}</div>
+              </div>
+              @if (activeProgram()?.id === p.id) { <span class="program-check">✓</span> }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <span class="topbar-title">{{ activeProgram()?.manufacturerName || 'Meridian Therapeutics' }} · {{ activeProgram()?.name || 'Velarix Access Program' }}</span>
+  }
   <div class="topbar-right">
     <div class="scenario-wrapper">
       <div class="topbar-scenario" (click)="scenarioOpen = !scenarioOpen">

@@ -5,12 +5,21 @@
 <div class="admin-grid">
   <!-- Manufacturers -->
   <div class="admin-panel">
-    <div class="panel-head"><span class="panel-head-title">Manufacturers</span><span class="panel-head-count">{{ manufacturers().length }}</span></div>
+    <div class="panel-head">
+      <span class="panel-head-title">Manufacturers</span>
+      <span class="panel-head-count">{{ manufacturers().length }}</span>
+      <button class="panel-add-btn" (click)="openCreateMfr()" title="New Manufacturer">+</button>
+    </div>
     <div class="panel-list">
       @for (m of manufacturers(); track m.id) {
         <div class="panel-item" [class.selected]="selectedMfr()?.id === m.id" (click)="selectMfr(m)">
-          <div class="panel-item-name">{{ m.name }}</div>
-          <div class="panel-item-meta">{{ m.programCount }} programs · {{ m.status }}</div>
+          <div class="panel-item-row">
+            <div class="panel-item-text">
+              <div class="panel-item-name">{{ m.name }}</div>
+              <div class="panel-item-meta">{{ m.programCount }} programs · {{ m.status }}</div>
+            </div>
+            <button class="row-edit-btn" (click)="openEditMfr(m, $event)" title="Edit manufacturer">&#9998;</button>
+          </div>
         </div>
       }
     </div>
@@ -18,7 +27,12 @@
 
   <!-- Programs -->
   <div class="admin-panel">
-    <div class="panel-head"><span class="panel-head-title">Programs</span></div>
+    <div class="panel-head">
+      <span class="panel-head-title">Programs</span>
+      @if (selectedMfr()) {
+        <button class="panel-add-btn" (click)="openCreateProgram()" title="New Program">+</button>
+      }
+    </div>
     <div class="panel-list">
       @if (!selectedMfr()) {
         <div class="panel-empty">Select a manufacturer</div>
@@ -28,6 +42,9 @@
             <div class="panel-item-name">{{ p.name }}</div>
             <div class="panel-item-meta">{{ p.drugBrandName }} · {{ p.status }}</div>
           </div>
+        }
+        @if (programs().length === 0) {
+          <div class="panel-empty">No programs yet</div>
         }
       }
     </div>
@@ -78,13 +95,48 @@
       </thead>
       <tbody>
         @for (u of users(); track u.id) {
-          <tr>
+          <tr class="user-row" [class.expanded]="expandedUserId() === u.id" (click)="toggleUserExpansion(u)">
             <td class="user-name">{{ u.firstName }} {{ u.lastName }}</td>
             <td>{{ u.email }}</td>
             <td><span class="role-badge">{{ u.roles?.[0] || '—' }}</span></td>
             <td><span class="status-dot" [class.active]="u.isActive"></span>{{ u.isActive ? 'Active' : 'Inactive' }}</td>
-            <td><button class="pw-edit-btn" (click)="openEditUser(u)" title="Edit user">&#9998;</button></td>
+            <td><button class="pw-edit-btn" (click)="openEditUser(u); $event.stopPropagation()" title="Edit user">&#9998;</button></td>
           </tr>
+          <!-- Expanded assignment panel -->
+          @if (expandedUserId() === u.id) {
+            <tr class="assignment-row">
+              <td colspan="5">
+                <div class="assignment-panel">
+                  <div class="assignment-header">
+                    <span class="assignment-title">Program Assignments</span>
+                    <button class="assign-btn" (click)="openAssignProgram(); $event.stopPropagation()">+ Assign to Program</button>
+                  </div>
+                  @if (loadingAssignments()) {
+                    <div class="assignment-loading">Loading assignments...</div>
+                  } @else if (userProgramAssignments().length === 0) {
+                    <div class="assignment-empty">No program assignments</div>
+                  } @else {
+                    <div class="assignment-list">
+                      @for (a of userProgramAssignments(); track a.programId) {
+                        <div class="assignment-item">
+                          <div class="assignment-info">
+                            <span class="assignment-program">{{ a.programName }}</span>
+                            <span class="assignment-mfr">{{ a.manufacturerName }}</span>
+                          </div>
+                          <div class="assignment-permissions">
+                            <label class="perm-toggle"><input type="checkbox" [(ngModel)]="a.canView" (click)="$event.stopPropagation()"><span>View</span></label>
+                            <label class="perm-toggle"><input type="checkbox" [(ngModel)]="a.canEdit" (click)="$event.stopPropagation()"><span>Edit</span></label>
+                            <label class="perm-toggle"><input type="checkbox" [(ngModel)]="a.canManage" (click)="$event.stopPropagation()"><span>Manage</span></label>
+                          </div>
+                          <button class="remove-assignment-btn" (click)="removeAssignment(a); $event.stopPropagation()" title="Remove assignment">&times;</button>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
         }
       </tbody>
     </table>
@@ -150,6 +202,202 @@
           </div>
           <button class="save-btn" (click)="inviteUser()">Send invite</button>
         }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Manufacturer Modal -->
+@if (showMfrModal()) {
+  <div class="modal-backdrop" (click)="showMfrModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">{{ mfrModalMode() === 'create' ? 'New Manufacturer' : 'Edit Manufacturer' }}</span>
+        <span class="modal-close" (click)="showMfrModal.set(false)">&times;</span>
+      </div>
+      <div class="modal-body">
+        @if (mfrError()) {
+          <div class="form-error">{{ mfrError() }}</div>
+        }
+        <div class="form-group">
+          <label class="form-label">Name <span class="required">*</span></label>
+          <input class="form-input" [(ngModel)]="mfrForm.name" placeholder="Manufacturer name" required>
+        </div>
+        <div class="form-row-modal">
+          <div class="form-group">
+            <label class="form-label">Contact Name</label>
+            <input class="form-input" [(ngModel)]="mfrForm.primaryContactName" placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Email</label>
+            <input class="form-input" type="email" [(ngModel)]="mfrForm.primaryContactEmail" placeholder="email@example.com">
+          </div>
+        </div>
+        <div class="form-row-modal">
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input class="form-input" [(ngModel)]="mfrForm.primaryContactPhone" placeholder="(555) 123-4567">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contract Reference</label>
+            <input class="form-input" [(ngModel)]="mfrForm.contractReference" placeholder="Contract ID or ref">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <textarea class="form-input form-textarea" [(ngModel)]="mfrForm.notes" rows="3" placeholder="Optional notes..."></textarea>
+        </div>
+        <button class="save-btn" (click)="saveMfr()" [disabled]="mfrSaving() || !mfrForm.name?.trim()">
+          {{ mfrSaving() ? 'Saving...' : (mfrModalMode() === 'create' ? 'Create Manufacturer' : 'Save Changes') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Program Wizard Modal -->
+@if (showProgramWizard()) {
+  <div class="modal-backdrop" (click)="showProgramWizard.set(false)">
+    <div class="modal modal-wide" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">New Program</span>
+        <div class="wizard-steps">
+          <span class="wizard-step" [class.active]="programWizardStep() === 1">1. Details</span>
+          <span class="wizard-step-divider">/</span>
+          <span class="wizard-step" [class.active]="programWizardStep() === 2">2. Configuration</span>
+        </div>
+        <span class="modal-close" (click)="showProgramWizard.set(false)">&times;</span>
+      </div>
+      <div class="modal-body wizard-body">
+        @if (programError()) {
+          <div class="form-error">{{ programError() }}</div>
+        }
+
+        <!-- Step 1: Program Details -->
+        @if (programWizardStep() === 1) {
+          <div class="form-group">
+            <label class="form-label">Manufacturer <span class="required">*</span></label>
+            <select class="form-input" [(ngModel)]="programForm.manufacturerId">
+              <option value="" disabled>Select manufacturer</option>
+              @for (m of allManufacturers(); track m.id) {
+                <option [value]="m.id">{{ m.name }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Program Name <span class="required">*</span></label>
+            <input class="form-input" [(ngModel)]="programForm.name" placeholder="e.g. Patient Access Program">
+          </div>
+          <div class="form-row-modal">
+            <div class="form-group">
+              <label class="form-label">Drug Brand Name</label>
+              <input class="form-input" [(ngModel)]="programForm.drugBrandName" placeholder="Brand name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Drug Generic Name</label>
+              <input class="form-input" [(ngModel)]="programForm.drugGenericName" placeholder="Generic name">
+            </div>
+          </div>
+          <div class="form-row-modal">
+            <div class="form-group">
+              <label class="form-label">Therapeutic Area</label>
+              <input class="form-input" [(ngModel)]="programForm.therapeuticArea" placeholder="e.g. Oncology">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Program Start Date</label>
+              <input class="form-input" type="date" [(ngModel)]="programForm.programStartDate">
+            </div>
+          </div>
+        }
+
+        <!-- Step 2: Configuration -->
+        @if (programWizardStep() === 2) {
+          <div class="wizard-config-grid">
+            <div class="wizard-config-col">
+              <div class="config-section">Workflow</div>
+              <label class="toggle-row"><span>Prior auth required</span><input type="checkbox" [(ngModel)]="programConfig.priorAuthRequired"></label>
+              <label class="toggle-row"><span>Copay assistance</span><input type="checkbox" [(ngModel)]="programConfig.copayAssistanceEnabled"></label>
+              <label class="toggle-row"><span>PAP enabled</span><input type="checkbox" [(ngModel)]="programConfig.papEnabled"></label>
+              <label class="toggle-row"><span>Bridge supply</span><input type="checkbox" [(ngModel)]="programConfig.bridgeSupplyEnabled"></label>
+              <label class="toggle-row"><span>eBV enabled</span><input type="checkbox" [(ngModel)]="programConfig.ebvEnabled"></label>
+              <label class="toggle-row"><span>eIV enabled</span><input type="checkbox" [(ngModel)]="programConfig.eivEnabled"></label>
+
+              <div class="config-section">Financial</div>
+              <div class="config-field"><label>FPL threshold %</label><input type="number" [(ngModel)]="programConfig.fplThresholdPct"></div>
+
+              <div class="config-section">Enrollment</div>
+              <label class="toggle-row"><span>Auto-approve enrollment</span><input type="checkbox" [(ngModel)]="programConfig.enrollmentAutoApprove"></label>
+              <label class="toggle-row"><span>Require physician signature</span><input type="checkbox" [(ngModel)]="programConfig.requirePhysicianSignature"></label>
+              <label class="toggle-row"><span>Require consent form</span><input type="checkbox" [(ngModel)]="programConfig.requireConsentForm"></label>
+            </div>
+
+            <div class="wizard-config-col">
+              <div class="config-section">PA SLA</div>
+              <div class="config-field"><label>Submit SLA (days)</label><input type="number" [(ngModel)]="programConfig.paSubmitSlaBusinessDays"></div>
+              <div class="config-field"><label>Appeal window (days)</label><input type="number" [(ngModel)]="programConfig.paAppealWindowDays"></div>
+              <div class="config-field"><label>Follow-up interval (days)</label><input type="number" [(ngModel)]="programConfig.paFollowUpIntervalDays"></div>
+
+              <div class="config-section">Adherence</div>
+              <label class="toggle-row"><span>Adherence program</span><input type="checkbox" [(ngModel)]="programConfig.adherenceProgramEnabled"></label>
+              <div class="config-field"><label>Check interval (days)</label><input type="number" [(ngModel)]="programConfig.adherenceCheckIntervalDays"></div>
+              <div class="config-field"><label>Alert threshold %</label><input type="number" [(ngModel)]="programConfig.adherenceAlertThresholdPct"></div>
+
+              <div class="config-section">Additional Services</div>
+              <label class="toggle-row"><span>Nursing support</span><input type="checkbox" [(ngModel)]="programConfig.nursingSupport"></label>
+              <label class="toggle-row"><span>Financial counseling</span><input type="checkbox" [(ngModel)]="programConfig.financialCounseling"></label>
+              <label class="toggle-row"><span>Patient education</span><input type="checkbox" [(ngModel)]="programConfig.patientEducation"></label>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Wizard Footer -->
+      <div class="wizard-footer">
+        @if (programWizardStep() === 1) {
+          <button class="btn-secondary" (click)="showProgramWizard.set(false)">Cancel</button>
+          <button class="save-btn wizard-next-btn" (click)="programWizardNext()" [disabled]="!programForm.manufacturerId || !programForm.name?.trim()">Next: Configuration</button>
+        }
+        @if (programWizardStep() === 2) {
+          <button class="btn-secondary" (click)="programWizardBack()">Back</button>
+          <div class="wizard-footer-right">
+            <button class="btn-secondary" (click)="showProgramWizard.set(false)">Cancel</button>
+            <button class="save-btn wizard-create-btn" (click)="saveProgram()" [disabled]="programSaving()">
+              {{ programSaving() ? 'Creating...' : 'Create Program' }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Assign Program Modal -->
+@if (showAssignProgramModal()) {
+  <div class="modal-backdrop" (click)="showAssignProgramModal.set(false)">
+    <div class="modal modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-head">
+        <span class="modal-title">Assign to Program</span>
+        <span class="modal-close" (click)="showAssignProgramModal.set(false)">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Program</label>
+          <select class="form-input" [(ngModel)]="assignProgramId">
+            <option value="" disabled>Select a program</option>
+            @for (p of unassignedPrograms(); track p.id) {
+              <option [value]="p.id">{{ p.manufacturerName }} — {{ p.name }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Permissions</label>
+          <div class="perm-checkboxes">
+            <label class="perm-toggle"><input type="checkbox" [(ngModel)]="assignPermissions.canView"><span>View</span></label>
+            <label class="perm-toggle"><input type="checkbox" [(ngModel)]="assignPermissions.canEdit"><span>Edit</span></label>
+            <label class="perm-toggle"><input type="checkbox" [(ngModel)]="assignPermissions.canManage"><span>Manage</span></label>
+          </div>
+        </div>
+        <button class="save-btn" (click)="submitAssignProgram()" [disabled]="!assignProgramId">Assign</button>
       </div>
     </div>
   </div>

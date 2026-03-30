@@ -1,8 +1,9 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { DemoScenarioService } from '../../core/services/demo-scenario.service';
+import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -11,11 +12,14 @@ import { DemoScenarioService } from '../../core/services/demo-scenario.service';
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.css'
 })
-export class MainLayoutComponent {
+export class MainLayoutComponent implements OnInit {
   private authService = inject(AuthService);
+  private api = inject(ApiService);
+  private router = inject(Router);
   scenarioService = inject(DemoScenarioService);
 
   scenarioOpen = false;
+  programSwitcherOpen = false;
   scenarios = [
     { key: 'DEFAULT', desc: 'Commercial, PA required', dotClass: 'dot-green' },
     { key: 'GOVERNMENT_PATIENT', desc: 'Medicare, copay blocked (AKS)', dotClass: 'dot-amber' },
@@ -23,6 +27,9 @@ export class MainLayoutComponent {
     { key: 'PA_DENIED', desc: 'PA denied, triggers appeal', dotClass: 'dot-red' },
     { key: 'EIV_INELIGIBLE', desc: 'Income too high for PAP', dotClass: 'dot-gray' },
   ];
+
+  myPrograms = signal<any[]>([]);
+  activeProgram = signal<any>(null);
 
   user = this.authService.user;
   initials = computed(() => {
@@ -41,6 +48,41 @@ export class MainLayoutComponent {
     const s = this.scenarioService.scenario();
     return this.scenarios.find(sc => sc.key === s)?.dotClass || 'dot-green';
   });
+  showProgramSwitcher = computed(() => this.myPrograms().length > 1);
+
+  ngOnInit() {
+    this.api.getMyPrograms().subscribe({
+      next: (programs) => {
+        this.myPrograms.set(programs);
+        // Set first as active if not already set
+        if (programs.length > 0 && !this.activeProgram()) {
+          this.activeProgram.set(programs[0]);
+        }
+      }
+    });
+  }
+
+  switchProgram(program: any) {
+    this.api.setActiveProgram(program.id).subscribe({
+      next: (res) => {
+        // Store new JWT
+        if (res.accessToken) {
+          localStorage.setItem('ha_access_token', res.accessToken);
+        }
+        this.activeProgram.set(program);
+        this.programSwitcherOpen = false;
+        // Reload current route to refresh data
+        const currentUrl = this.router.url;
+        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+          this.router.navigateByUrl(currentUrl);
+        });
+      }
+    });
+  }
+
+  getProgramDotClass(index: number): string {
+    return ['dot-teal', 'dot-purple', 'dot-blue', 'dot-amber'][index % 4];
+  }
 
   setScenario(key: string) {
     this.scenarioService.setScenario(key);
