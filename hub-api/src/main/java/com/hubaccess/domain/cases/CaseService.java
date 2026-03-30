@@ -165,8 +165,15 @@ public class CaseService {
                 .filter(c -> Boolean.TRUE.equals(c.slaBreachFlag()))
                 .toList();
 
-        List<CaseTaskDto> openTasks = taskRepo.findByAssignedToAndStatusIn(user.id(), List.of("OPEN", "IN_PROGRESS"))
-                .stream().map(this::toTaskDto).toList();
+        List<CaseTaskDto> openTasks;
+        if (user.roles().contains("HUB_ADMIN")) {
+            openTasks = taskRepo.findAll().stream()
+                    .filter(t -> List.of("OPEN", "IN_PROGRESS").contains(t.getStatus()))
+                    .map(this::toTaskDto).toList();
+        } else {
+            openTasks = taskRepo.findByAssignedToAndStatusIn(user.id(), List.of("OPEN", "IN_PROGRESS"))
+                    .stream().map(this::toTaskDto).toList();
+        }
 
         long totalOpen = myCases.stream().filter(c -> !"CLOSED".equals(c.stage())).count();
         long pendingConsent = myCases.stream().filter(c -> "CONSENT".equals(c.stage())).count();

@@ -104,13 +104,14 @@ export class CaseDetailComponent implements OnInit {
   addNote() {
     const c = this.caseDetail();
     if (!c || !this.noteText.trim()) return;
-    this.api.performAction(c.id, 'LOG_CHECKIN_CALL', { notes: this.noteText }).subscribe();
-    // Simpler: direct interaction POST
-    const body = { interactionType: 'NOTE', direction: 'INTERNAL', notes: this.noteText, contactName: '' };
-    // Use fetch for interaction POST since we don't have it in ApiService yet
+    const note = this.noteText;
     this.showNoteModal.set(false);
     this.noteText = '';
-    this.api.getTimeline(c.id).subscribe(tl => this.timeline.set(tl));
+    this.api.performAction(c.id, 'LOG_CHECKIN_CALL', { notes: note }).subscribe({
+      next: () => {
+        this.api.getTimeline(c.id).subscribe(tl => this.timeline.set(tl));
+      }
+    });
   }
 
   getActionDescription(): string {

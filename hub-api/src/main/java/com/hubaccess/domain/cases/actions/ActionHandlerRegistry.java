@@ -142,11 +142,19 @@ public class ActionHandlerRegistry {
             simulateLatency(800, 1500);
             String scenario = actionService.getDemoScenario();
 
-            resultFields = switch (scenario) {
-                case "GOVERNMENT_PATIENT" -> buildGovernmentResult(hc);
-                case "UNINSURED_PATIENT" -> buildUninsuredResult(hc);
-                default -> buildCommercialResult(hc);
-            };
+            // Check if case already has a government/uninsured insurance plan from enrollment
+            String existingInsType = insurancePlanRepo.findByCaseId(hc.getId()).stream()
+                    .filter(ip -> Boolean.TRUE.equals(ip.getIsPrimary()))
+                    .map(ip -> ip.getInsuranceType())
+                    .findFirst().orElse(null);
+            boolean isGovt = "GOVERNMENT_PATIENT".equals(scenario)
+                    || (existingInsType != null && java.util.Set.of("MEDICARE", "MEDICAID", "TRICARE", "VA", "MEDICARE_ADVANTAGE").contains(existingInsType));
+            boolean isUninsured = "UNINSURED_PATIENT".equals(scenario)
+                    || "UNINSURED".equals(existingInsType);
+
+            resultFields = isGovt ? buildGovernmentResult(hc)
+                    : isUninsured ? buildUninsuredResult(hc)
+                    : buildCommercialResult(hc);
 
             // Create insurance plan record
             String insType = resultFields.get("insurance_type");
