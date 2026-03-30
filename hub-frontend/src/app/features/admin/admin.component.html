@@ -74,7 +74,7 @@
     </div>
     <table class="users-table">
       <thead>
-        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Password</th><th>Last login</th></tr>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr>
       </thead>
       <tbody>
         @for (u of users(); track u.id) {
@@ -83,24 +83,48 @@
             <td>{{ u.email }}</td>
             <td><span class="role-badge">{{ u.roles?.[0] || '—' }}</span></td>
             <td><span class="status-dot" [class.active]="u.isActive"></span>{{ u.isActive ? 'Active' : 'Inactive' }}</td>
-            <td class="password-cell">
-              @if (editingPasswordUserId() === u.id) {
-                <div class="pw-edit">
-                  <input class="pw-input" type="password" [(ngModel)]="newPassword" placeholder="Min 6 chars" (keydown.enter)="savePassword(u.id)">
-                  <button class="pw-save" (click)="savePassword(u.id)" title="Save">&#10003;</button>
-                  <button class="pw-cancel" (click)="cancelEditPassword()" title="Cancel">&#10005;</button>
-                </div>
-              } @else if (passwordSaved() === u.id) {
-                <span class="pw-saved">Saved</span>
-              } @else {
-                <button class="pw-edit-btn" (click)="startEditPassword(u.id)" title="Change password">&#9998;</button>
-              }
-            </td>
-            <td class="user-login">{{ u.lastLoginAt || 'Never' }}</td>
+            <td><button class="pw-edit-btn" (click)="openEditUser(u)" title="Edit user">&#9998;</button></td>
           </tr>
         }
       </tbody>
     </table>
+  </div>
+}
+
+<!-- Edit User Modal -->
+@if (showEditUserModal()) {
+  <div class="modal-backdrop" (click)="showEditUserModal.set(false)">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-head"><span class="modal-title">Edit User</span><span class="modal-close" (click)="showEditUserModal.set(false)">&times;</span></div>
+      <div class="modal-body">
+        @if (editUserSaved()) {
+          <div class="invite-success">User updated successfully.</div>
+        } @else {
+          <div class="form-row-modal">
+            <div class="form-group"><label class="form-label">First name</label><input class="form-input" [(ngModel)]="editUser.firstName"></div>
+            <div class="form-group"><label class="form-label">Last name</label><input class="form-input" [(ngModel)]="editUser.lastName"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Role</label>
+            <select class="form-input" [(ngModel)]="editUser.role">
+              <option value="CASE_MANAGER">Case Manager</option>
+              <option value="HUB_ADMIN">Hub Admin</option>
+              <option value="SUPERVISOR">Supervisor</option>
+              <option value="REIMBURSEMENT_COORDINATOR">Reimbursement Coordinator</option>
+              <option value="CARE_COORDINATOR">Care Coordinator</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-input" [(ngModel)]="editUser.isActive">
+              <option [ngValue]="true">Active</option>
+              <option [ngValue]="false">Inactive</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">New password (leave blank to keep current)</label><input class="form-input" type="password" [(ngModel)]="editUser.password" placeholder="Min 6 chars"></div>
+          <button class="save-btn" (click)="saveEditUser()">Save changes</button>
+        }
+      </div>
+    </div>
   </div>
 }
 

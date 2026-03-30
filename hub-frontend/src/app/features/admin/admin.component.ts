@@ -32,6 +32,9 @@ export class AdminComponent implements OnInit {
   editingPasswordUserId = signal<string | null>(null);
   newPassword = '';
   passwordSaved = signal<string | null>(null);
+  showEditUserModal = signal(false);
+  editUser: any = {};
+  editUserSaved = signal(false);
 
   isAdmin = () => this.auth.user()?.roles?.includes('HUB_ADMIN') ?? false;
 
@@ -94,5 +97,25 @@ export class AdminComponent implements OnInit {
   cancelEditPassword() {
     this.editingPasswordUserId.set(null);
     this.newPassword = '';
+  }
+
+  openEditUser(u: any) {
+    this.editUser = { id: u.id, firstName: u.firstName, lastName: u.lastName, role: u.roles?.[0] || 'CASE_MANAGER', isActive: u.isActive, password: '' };
+    this.editUserSaved.set(false);
+    this.showEditUserModal.set(true);
+  }
+
+  saveEditUser() {
+    const body: any = { firstName: this.editUser.firstName, lastName: this.editUser.lastName, isActive: this.editUser.isActive, role: this.editUser.role };
+    if (this.editUser.password && this.editUser.password.length >= 6) {
+      body.password = this.editUser.password;
+    }
+    this.api.updateUser(this.editUser.id, body).subscribe({
+      next: () => {
+        this.editUserSaved.set(true);
+        this.api.getUsers().subscribe(u => this.users.set(u));
+        setTimeout(() => this.showEditUserModal.set(false), 1500);
+      }
+    });
   }
 }

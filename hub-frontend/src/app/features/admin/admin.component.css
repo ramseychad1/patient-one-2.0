@@ -56,6 +56,7 @@
 .form-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); font-size: 13px; font-family: var(--font); }
 .invite-success { background: var(--ok-bg); border-radius: var(--radius-md); padding: 16px; font-size: 13px; color: var(--teal); }
 .invite-success code { font-family: monospace; font-weight: 700; color: var(--text-primary); }
+.form-row-modal { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 /* Password edit */
 .password-cell { min-width: 120px; }

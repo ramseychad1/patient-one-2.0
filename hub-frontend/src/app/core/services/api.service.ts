@@ -71,4 +71,8 @@ export class ApiService {
   updateUserPassword(userId: string, password: string): Observable<any> {
     return this.http.put<ApiResponse<any>>(`${this.baseUrl}/users/${userId}/password`, { password }).pipe(map(r => r.data));
   }
+
+  updateUser(userId: string, body: any): Observable<any> {
+    return this.http.put<ApiResponse<any>>(`${this.baseUrl}/users/${userId}`, body).pipe(map(r => r.data));
+  }
 }

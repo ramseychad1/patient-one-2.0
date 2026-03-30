@@ -179,6 +179,44 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(result));
     }
 
+    @PutMapping("/users/{userId}")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updateUser(
+            @PathVariable UUID userId,
+            @RequestBody Map<String, Object> body, Authentication auth) {
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+        if (!user.roles().contains("HUB_ADMIN")) {
+            throw new org.springframework.security.access.AccessDeniedException("HubAdmin only");
+        }
+        HubUser target = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+        if (body.containsKey("firstName")) target.setFirstName((String) body.get("firstName"));
+        if (body.containsKey("lastName")) target.setLastName((String) body.get("lastName"));
+        if (body.containsKey("isActive")) target.setIsActive((Boolean) body.get("isActive"));
+        if (body.containsKey("password")) {
+            String pw = (String) body.get("password");
+            if (pw != null && pw.length() >= 6) target.setPasswordHash(passwordEncoder.encode(pw));
+        }
+        userRepo.save(target);
+
+        // Update role if provided
+        if (body.containsKey("role")) {
+            String roleName = (String) body.get("role");
+            // Remove existing roles
+            userRoleRepo.findByUserId(userId).forEach(ur -> userRoleRepo.delete(ur));
+            // Add new role
+            roleRepo.findByName(roleName).ifPresent(role ->
+                    userRoleRepo.save(UserRole.builder()
+                            .userId(userId).roleId(role.getId()).assignedBy(user.id()).build()));
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("id", target.getId());
+        result.put("email", target.getEmail());
+        result.put("updated", true);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
     @PutMapping("/users/{userId}/password")
     public ResponseEntity<ApiResponse<Map<String, Object>>> updatePassword(
             @PathVariable UUID userId,
