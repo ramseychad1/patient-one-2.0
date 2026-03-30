@@ -3,6 +3,8 @@ package com.hubaccess.domain.activity;
 import com.hubaccess.domain.activity.dto.CaseTaskDto;
 import com.hubaccess.domain.activity.dto.CreateTaskRequest;
 import com.hubaccess.domain.activity.dto.PatchTaskRequest;
+import com.hubaccess.domain.cases.HubCase;
+import com.hubaccess.domain.cases.HubCaseRepository;
 import com.hubaccess.security.AuthenticatedUser;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -11,13 +13,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CaseTaskService {
 
     private final CaseTaskRepository taskRepo;
+    private final HubCaseRepository caseRepo;
 
     private static final List<String> PRIORITY_ORDER = List.of("HIGH", "MEDIUM", "LOW");
 
@@ -80,6 +85,15 @@ public class CaseTaskService {
         } else {
             tasks = taskRepo.findByAssignedToAndStatusIn(user.id(), List.of("OPEN", "IN_PROGRESS"));
         }
+        // Filter by active program if set
+        if (user.activeProgramId() != null) {
+            Set<UUID> programCaseIds = caseRepo.findAll().stream()
+                    .filter(c -> c.getProgramId().equals(user.activeProgramId()))
+                    .map(HubCase::getId)
+                    .collect(Collectors.toSet());
+            tasks = tasks.stream().filter(t -> programCaseIds.contains(t.getCaseId())).toList();
+        }
+
         return tasks.stream()
                 .sorted(Comparator
                         .comparing((CaseTask t) -> PRIORITY_ORDER.indexOf(t.getPriority()))

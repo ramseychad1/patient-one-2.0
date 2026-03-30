@@ -65,17 +65,14 @@ export class MainLayoutComponent implements OnInit {
   switchProgram(program: any) {
     this.api.setActiveProgram(program.id).subscribe({
       next: (res) => {
-        // Store new JWT
+        // Store new JWT with activeProgramId claim
         if (res.accessToken) {
           localStorage.setItem('ha_access_token', res.accessToken);
         }
         this.activeProgram.set(program);
         this.programSwitcherOpen = false;
-        // Reload current route to refresh data
-        const currentUrl = this.router.url;
-        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-          this.router.navigateByUrl(currentUrl);
-        });
+        // Full page reload to ensure all components re-fetch with new program context
+        window.location.reload();
       }
     });
   }

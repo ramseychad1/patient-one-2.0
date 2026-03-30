@@ -100,6 +100,11 @@ public class JwtService {
         return parseToken(token).get("roles", List.class);
     }
 
+    public UUID getActiveProgramId(String token) {
+        String val = parseToken(token).get("activeProgramId", String.class);
+        return val != null ? UUID.fromString(val) : null;
+    }
+
     public boolean isRefreshToken(String token) {
         return "refresh".equals(parseToken(token).get("type", String.class));
     }

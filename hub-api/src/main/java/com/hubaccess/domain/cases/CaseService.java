@@ -73,6 +73,13 @@ public class CaseService {
                     .toList();
         }
 
+        // Filter by active program if set
+        if (user.activeProgramId() != null) {
+            cases = cases.stream()
+                    .filter(c -> c.getProgramId().equals(user.activeProgramId()))
+                    .toList();
+        }
+
         Stream<HubCase> stream = cases.stream();
         if (stage != null) stream = stream.filter(c -> stage.equals(c.getCurrentStage()));
         if (status != null) stream = stream.filter(c -> status.equals(c.getCurrentWorkflowState()));
@@ -173,6 +180,14 @@ public class CaseService {
         } else {
             openTasks = taskRepo.findByAssignedToAndStatusIn(user.id(), List.of("OPEN", "IN_PROGRESS"))
                     .stream().map(this::toTaskDto).toList();
+        }
+        // Filter tasks by active program's cases
+        if (user.activeProgramId() != null) {
+            java.util.Set<java.util.UUID> programCaseIds = myCases.stream()
+                    .map(CaseListItemDto::id).collect(java.util.stream.Collectors.toSet());
+            openTasks = openTasks.stream()
+                    .filter(t -> programCaseIds.contains(t.caseId()))
+                    .toList();
         }
 
         long totalOpen = myCases.stream().filter(c -> !"CLOSED".equals(c.stage())).count();
