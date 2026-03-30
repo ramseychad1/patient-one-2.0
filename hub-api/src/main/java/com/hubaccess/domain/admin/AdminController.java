@@ -178,4 +178,27 @@ public class AdminController {
         result.put("tempPassword", tempPassword);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(result));
     }
+
+    @PutMapping("/users/{userId}/password")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> updatePassword(
+            @PathVariable UUID userId,
+            @RequestBody Map<String, String> body, Authentication auth) {
+        AuthenticatedUser user = (AuthenticatedUser) auth.getPrincipal();
+        if (!user.roles().contains("HUB_ADMIN")) {
+            throw new org.springframework.security.access.AccessDeniedException("HubAdmin only");
+        }
+        HubUser target = userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        String newPassword = body.get("password");
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
+        target.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepo.save(target);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("id", target.getId());
+        result.put("email", target.getEmail());
+        result.put("updated", true);
+        return ResponseEntity.ok(ApiResponse.ok(result));
+    }
 }

@@ -29,6 +29,9 @@ export class AdminComponent implements OnInit {
   inviteFirstName = '';
   inviteLastName = '';
   inviteResult = signal<any>(null);
+  editingPasswordUserId = signal<string | null>(null);
+  newPassword = '';
+  passwordSaved = signal<string | null>(null);
 
   isAdmin = () => this.auth.user()?.roles?.includes('HUB_ADMIN') ?? false;
 
@@ -68,5 +71,28 @@ export class AdminComponent implements OnInit {
         this.api.getUsers().subscribe(u => this.users.set(u));
       }
     });
+  }
+
+  startEditPassword(userId: string) {
+    this.editingPasswordUserId.set(userId);
+    this.newPassword = '';
+    this.passwordSaved.set(null);
+  }
+
+  savePassword(userId: string) {
+    if (!this.newPassword || this.newPassword.length < 6) return;
+    this.api.updateUserPassword(userId, this.newPassword).subscribe({
+      next: () => {
+        this.editingPasswordUserId.set(null);
+        this.newPassword = '';
+        this.passwordSaved.set(userId);
+        setTimeout(() => this.passwordSaved.set(null), 3000);
+      }
+    });
+  }
+
+  cancelEditPassword() {
+    this.editingPasswordUserId.set(null);
+    this.newPassword = '';
   }
 }

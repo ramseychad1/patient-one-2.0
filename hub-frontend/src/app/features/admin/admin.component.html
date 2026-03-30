@@ -74,7 +74,7 @@
     </div>
     <table class="users-table">
       <thead>
-        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Last login</th></tr>
+        <tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Password</th><th>Last login</th></tr>
       </thead>
       <tbody>
         @for (u of users(); track u.id) {
@@ -83,6 +83,19 @@
             <td>{{ u.email }}</td>
             <td><span class="role-badge">{{ u.roles?.[0] || '—' }}</span></td>
             <td><span class="status-dot" [class.active]="u.isActive"></span>{{ u.isActive ? 'Active' : 'Inactive' }}</td>
+            <td class="password-cell">
+              @if (editingPasswordUserId() === u.id) {
+                <div class="pw-edit">
+                  <input class="pw-input" type="password" [(ngModel)]="newPassword" placeholder="Min 6 chars" (keydown.enter)="savePassword(u.id)">
+                  <button class="pw-save" (click)="savePassword(u.id)" title="Save">&#10003;</button>
+                  <button class="pw-cancel" (click)="cancelEditPassword()" title="Cancel">&#10005;</button>
+                </div>
+              } @else if (passwordSaved() === u.id) {
+                <span class="pw-saved">Saved</span>
+              } @else {
+                <button class="pw-edit-btn" (click)="startEditPassword(u.id)" title="Change password">&#9998;</button>
+              }
+            </td>
             <td class="user-login">{{ u.lastLoginAt || 'Never' }}</td>
           </tr>
         }

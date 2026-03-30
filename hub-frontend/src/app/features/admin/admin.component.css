@@ -56,3 +56,16 @@
 .form-input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); font-size: 13px; font-family: var(--font); }
 .invite-success { background: var(--ok-bg); border-radius: var(--radius-md); padding: 16px; font-size: 13px; color: var(--teal); }
 .invite-success code { font-family: monospace; font-weight: 700; color: var(--text-primary); }
+
+/* Password edit */
+.password-cell { min-width: 120px; }
+.pw-edit-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px 6px; color: var(--text-tertiary); border-radius: var(--radius-sm); transition: all 0.12s; }
+.pw-edit-btn:hover { color: var(--teal); background: var(--teal-light); }
+.pw-edit { display: flex; align-items: center; gap: 4px; }
+.pw-input { width: 110px; padding: 4px 8px; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); font-size: 12px; font-family: var(--font); }
+.pw-input:focus { border-color: var(--teal); outline: none; }
+.pw-save { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--ok); padding: 2px 4px; }
+.pw-save:hover { color: var(--teal); }
+.pw-cancel { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--text-tertiary); padding: 2px 4px; }
+.pw-cancel:hover { color: var(--danger); }
+.pw-saved { font-size: 11px; color: var(--ok); font-weight: 600; }

@@ -67,4 +67,8 @@ export class ApiService {
   inviteUser(body: any): Observable<any> {
     return this.http.post<ApiResponse<any>>(`${this.baseUrl}/users/invite`, body).pipe(map(r => r.data));
   }
+
+  updateUserPassword(userId: string, password: string): Observable<any> {
+    return this.http.put<ApiResponse<any>>(`${this.baseUrl}/users/${userId}/password`, { password }).pipe(map(r => r.data));
+  }
 }
