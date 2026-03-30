@@ -1,9 +1,6 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
-COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
-COPY src ./src
+COPY . .
 RUN chmod +x ./mvnw && ./mvnw package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
