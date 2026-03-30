@@ -12,10 +12,10 @@ import { EnrollmentLauncherComponent } from './features/enrollment/enrollment-la
 
 export const routes: Routes = [
   {
-    path: '',
+    path: 'login',
     component: AuthLayoutComponent,
     children: [
-      { path: 'login', component: LoginComponent }
+      { path: '', component: LoginComponent }
     ]
   },
   {
@@ -25,8 +25,8 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: DashboardComponent },
       { path: 'cases/new', component: EnrollmentLauncherComponent },
-      { path: 'cases', component: CasesListComponent },
       { path: 'cases/:id', component: CaseDetailComponent },
+      { path: 'cases', component: CasesListComponent },
       { path: 'tasks', component: TaskQueueComponent },
       { path: 'admin', component: AdminComponent },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
