@@ -40,6 +40,7 @@ public class ActionHandlerRegistry {
 
     @PostConstruct
     public void registerAll() {
+        actionService.registerHandler("RESOLVE_MI", new ResolveMiHandler());
         actionService.registerHandler("SEND_CONSENT_SMS", new SendConsentSmsHandler());
         actionService.registerHandler("CONFIRM_CONSENT", new ConfirmConsentHandler());
         actionService.registerHandler("RUN_EBV", new RunEbvHandler());
@@ -68,6 +69,23 @@ public class ActionHandlerRegistry {
     }
 
     // ─── Handlers ────────────────────────────────────────────────────
+
+    class ResolveMiHandler implements ActionHandler {
+        @Override
+        public ActionResultDto.StubResult execute(HubCase hc, Map<String, Object> payload, AuthenticatedUser user) {
+            // Mark MI as resolved on the enrollment record
+            enrollmentRepo.findByCaseId(hc.getId()).ifPresent(er -> {
+                er.setMiResolvedAt(OffsetDateTime.now());
+                er.setMiResolvedBy(user.id());
+                enrollmentRepo.save(er);
+            });
+            return null;
+        }
+        @Override public String getNextState(HubCase hc) { return "CONSENT_PENDING"; }
+        @Override public String getNextStage(HubCase hc) { return "CONSENT"; }
+        @Override public String getNextActionKey(HubCase hc) { return "SEND_CONSENT_SMS"; }
+        @Override public String getNextActionLabel(HubCase hc) { return "Send consent request"; }
+    }
 
     class SendConsentSmsHandler implements ActionHandler {
         @Override
