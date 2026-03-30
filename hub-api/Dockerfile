@@ -1,6 +1,6 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
-COPY . .
+COPY hub-api/ .
 RUN chmod +x ./mvnw && ./mvnw package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
