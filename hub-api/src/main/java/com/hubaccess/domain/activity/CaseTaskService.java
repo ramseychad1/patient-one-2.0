@@ -71,7 +71,16 @@ public class CaseTaskService {
 
     @Transactional(readOnly = true)
     public List<CaseTaskDto> getMyTasks(AuthenticatedUser user) {
-        return taskRepo.findByAssignedToAndStatusIn(user.id(), List.of("OPEN", "IN_PROGRESS")).stream()
+        List<CaseTask> tasks;
+        if (user.roles().contains("HUB_ADMIN")) {
+            // Admin sees all open tasks across all users
+            tasks = taskRepo.findAll().stream()
+                    .filter(t -> List.of("OPEN", "IN_PROGRESS").contains(t.getStatus()))
+                    .toList();
+        } else {
+            tasks = taskRepo.findByAssignedToAndStatusIn(user.id(), List.of("OPEN", "IN_PROGRESS"));
+        }
+        return tasks.stream()
                 .sorted(Comparator
                         .comparing((CaseTask t) -> PRIORITY_ORDER.indexOf(t.getPriority()))
                         .thenComparing(t -> t.getDueAt() != null ? t.getDueAt() : java.time.OffsetDateTime.MAX))
