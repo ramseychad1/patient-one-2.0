@@ -128,7 +128,10 @@
             <td>{{ u.email }}</td>
             <td><span class="role-badge">{{ u.roles?.[0] || '—' }}</span></td>
             <td><span class="status-dot" [class.active]="u.isActive"></span>{{ u.isActive ? 'Active' : 'Inactive' }}</td>
-            <td><button class="pw-edit-btn" (click)="openEditUser(u); $event.stopPropagation()" title="Edit user">&#9998;</button></td>
+            <td class="action-cell">
+              <button class="pw-edit-btn" (click)="openEditUser(u); $event.stopPropagation()" title="Edit user">&#9998;</button>
+              <button class="delete-btn" (click)="deleteUser(u); $event.stopPropagation()" title="Delete user">&#128465;</button>
+            </td>
           </tr>
           <!-- Expanded assignment panel -->
           @if (expandedUserId() === u.id) {

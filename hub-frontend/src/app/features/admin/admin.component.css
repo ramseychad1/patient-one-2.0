@@ -82,6 +82,11 @@
 .remove-assignment-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--text-tertiary); padding: 2px 6px; border-radius: var(--radius-sm); transition: all 0.12s; line-height: 1; }
 .remove-assignment-btn:hover { color: var(--danger); background: rgba(239, 68, 68, 0.08); }
 
+/* Action cell with edit + delete */
+.action-cell { display: flex; gap: 4px; }
+.delete-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 6px; color: var(--text-tertiary); border-radius: var(--radius-sm); transition: all 0.12s; }
+.delete-btn:hover { color: var(--danger); background: rgba(239, 68, 68, 0.08); }
+
 /* Modal */
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; align-items: center; justify-content: center; }
 .modal { background: var(--surface-card); border-radius: var(--radius-lg); width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }

@@ -187,6 +187,13 @@ export class AdminComponent implements OnInit {
     this.newPassword = '';
   }
 
+  deleteUser(u: any) {
+    if (!confirm(`Are you sure you want to delete ${u.firstName} ${u.lastName} (${u.email})? This cannot be undone.`)) return;
+    this.api.updateUser(u.id, { isActive: false }).subscribe(() => {
+      this.api.getUsers().subscribe(users => this.users.set(users));
+    });
+  }
+
   // --- Edit User (tabbed) ---
 
   openEditUser(u: any) {
