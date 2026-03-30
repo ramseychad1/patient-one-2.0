@@ -28,6 +28,11 @@
 .form-input { width: 100%; padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: var(--radius-md); font-size: 14px; font-family: var(--font); color: var(--text-primary); background: #fff; outline: none; transition: border-color 0.15s, box-shadow 0.15s; }
 .form-input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(15,110,86,0.1); }
 .form-input::placeholder { color: var(--text-tertiary); }
+.password-wrapper { position: relative; }
+.password-wrapper .form-input { padding-right: 40px; }
+.eye-toggle { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; padding: 2px; color: var(--text-tertiary); display: flex; align-items: center; }
+.eye-toggle:hover { color: var(--text-secondary); }
+.eye-toggle svg { width: 18px; height: 18px; }
 .form-forgot { text-align: right; margin-top: -10px; margin-bottom: 16px; }
 .form-forgot a { font-size: 12px; color: var(--text-tertiary); text-decoration: none; }
 .form-forgot a:hover { color: var(--teal); }
