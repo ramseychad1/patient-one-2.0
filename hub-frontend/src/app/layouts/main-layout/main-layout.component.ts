@@ -69,10 +69,9 @@ export class MainLayoutComponent implements OnInit {
         if (res.accessToken) {
           localStorage.setItem('ha_access_token', res.accessToken);
         }
-        this.activeProgram.set(program);
         this.programSwitcherOpen = false;
-        // Full page reload to ensure all components re-fetch with new program context
-        window.location.reload();
+        // Navigate to dashboard with full page reload to reset all components
+        window.location.href = '/dashboard';
       }
     });
   }
