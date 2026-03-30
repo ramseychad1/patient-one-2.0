@@ -54,10 +54,10 @@ export class MainLayoutComponent implements OnInit {
     this.api.getMyPrograms().subscribe({
       next: (programs) => {
         this.myPrograms.set(programs);
-        // Set first as active if not already set
-        if (programs.length > 0 && !this.activeProgram()) {
-          this.activeProgram.set(programs[0]);
-        }
+        // Restore active program from localStorage, or default to first
+        const savedId = localStorage.getItem('ha_active_program_id');
+        const match = savedId ? programs.find((p: any) => p.id === savedId) : null;
+        this.activeProgram.set(match || programs[0] || null);
       }
     });
   }
@@ -69,6 +69,7 @@ export class MainLayoutComponent implements OnInit {
         if (res.accessToken) {
           localStorage.setItem('ha_access_token', res.accessToken);
         }
+        localStorage.setItem('ha_active_program_id', program.id);
         this.programSwitcherOpen = false;
         // Navigate to dashboard with full page reload to reset all components
         window.location.href = '/dashboard';
