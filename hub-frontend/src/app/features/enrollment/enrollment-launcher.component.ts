@@ -93,7 +93,14 @@ export class EnrollmentLauncherComponent {
       next: (res) => {
         this.submitting.set(false);
         this.closeModal();
-        this.router.navigate(['/cases', res.data.id]);
+        // Store new case info for dashboard highlight
+        localStorage.setItem('ha_new_case', JSON.stringify({
+          id: res.data.id,
+          caseNumber: res.data.caseNumber,
+          patientName: res.data.patient?.firstName + ' ' + res.data.patient?.lastName,
+          timestamp: Date.now()
+        }));
+        this.router.navigate(['/dashboard']);
       },
       error: () => this.submitting.set(false)
     });

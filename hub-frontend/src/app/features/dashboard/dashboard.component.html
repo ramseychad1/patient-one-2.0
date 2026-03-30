@@ -3,6 +3,13 @@
 } @else if (error()) {
   <div class="error-state">{{ error() }}</div>
 } @else {
+  @if (newCaseToast()) {
+    <div class="new-case-toast" (click)="router.navigate(['/cases', newCaseToast()!.id])">
+      <span class="toast-icon">&#10003;</span>
+      <span>Case <strong>{{ newCaseToast()!.caseNumber }}</strong> created for {{ newCaseToast()!.patientName }}</span>
+      <span class="toast-action">Open case →</span>
+    </div>
+  }
   <div class="page-head">
     <div class="page-head-row">
       <div>
@@ -59,10 +66,10 @@
           <div class="empty-state">No cases match this filter.</div>
         }
         @for (c of filteredCases(); track c.id; let i = $index) {
-          <div class="case-row" [class.sla-breach]="c.slaBreachFlag" (click)="openCase(c)">
+          <div class="case-row" [class.sla-breach]="c.slaBreachFlag" [class.new-case]="newCaseId() === c.id" (click)="openCase(c)">
             <div class="case-avatar" [ngClass]="getAvatarClass(i)">{{ getInitials(c.patientName) }}</div>
             <div class="case-body">
-              <div class="case-name">{{ c.patientName }}</div>
+              <div class="case-name">{{ c.patientName }} @if (newCaseId() === c.id) { <span class="new-badge">NEW</span> }</div>
               <div class="case-meta">{{ c.caseNumber }} · {{ c.programName }}{{ c.insuranceType ? ' · ' + c.insuranceType : '' }}</div>
             </div>
             <div class="case-right">

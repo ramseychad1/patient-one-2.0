@@ -21,6 +21,8 @@ export class DashboardComponent implements OnInit {
   loading = signal(true);
   error = signal<string | null>(null);
   activeFilter = signal('all');
+  newCaseToast = signal<{caseNumber: string; patientName: string; id: string} | null>(null);
+  newCaseId = signal<string | null>(null);
 
   user = this.authService.user;
 
@@ -46,6 +48,18 @@ export class DashboardComponent implements OnInit {
   });
 
   ngOnInit() {
+    // Check for newly created case
+    const stored = localStorage.getItem('ha_new_case');
+    if (stored) {
+      const nc = JSON.parse(stored);
+      if (Date.now() - nc.timestamp < 60000) { // within last 60 seconds
+        this.newCaseToast.set(nc);
+        this.newCaseId.set(nc.id);
+        setTimeout(() => this.newCaseToast.set(null), 8000);
+      }
+      localStorage.removeItem('ha_new_case');
+    }
+
     this.api.getDashboard().subscribe({
       next: (data) => { this.dashboard.set(data); this.loading.set(false); },
       error: (err) => { this.error.set('Failed to load dashboard'); this.loading.set(false); }
