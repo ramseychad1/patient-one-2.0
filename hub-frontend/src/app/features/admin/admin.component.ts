@@ -223,31 +223,43 @@ export class AdminComponent implements OnInit {
       programStartDate: ''
     };
     this.programConfig = {
+      // Enrollment
+      acceptedSources: ['FAX_PDF', 'ERX', 'DEP'],
+      miSlaBusinessDays: 5,
+      consentMethod: 'SMS',
       // Workflow
       priorAuthRequired: true,
-      copayAssistanceEnabled: false,
-      papEnabled: false,
-      bridgeSupplyEnabled: false,
-      ebvEnabled: false,
-      eivEnabled: false,
+      copayAssistanceEnabled: true,
+      papEnabled: true,
+      bridgeSupplyEnabled: true,
+      quickStartEnabled: true,
+      remsTrackingEnabled: false,
+      adherenceProgramEnabled: true,
+      ebvEnabled: true,
+      eivEnabled: true,
+      nurseEducationEnabled: false,
+      welcomeKitEnabled: false,
+      travelAssistanceEnabled: false,
+      infusionSiteEnabled: false,
       // Financial
       fplThresholdPct: 400,
-      // Enrollment
-      enrollmentAutoApprove: false,
-      requirePhysicianSignature: true,
-      requireConsentForm: true,
+      papApprovalDurationMonths: 12,
+      papReenrollmentLeadDays: 90,
+      copayMaxBenefitUsd: null,
+      bridgeMaxDurationMonths: 6,
+      quickStartMaxDurationMonths: 12,
       // PA SLA
-      paSubmitSlaBusinessDays: 5,
+      paSubmitSlaBusinessDays: 3,
+      paFollowupSlaBusinessDays: 5,
       paAppealWindowDays: 30,
-      paFollowUpIntervalDays: 7,
-      // Adherence
-      adherenceProgramEnabled: false,
-      adherenceCheckIntervalDays: 30,
-      adherenceAlertThresholdPct: 80,
-      // Additional Services
-      nursingSupport: false,
-      financialCounseling: false,
-      patientEducation: false
+      paMaxAppealLevels: 2,
+      paAutoEscalate: true,
+      // SP & Adherence
+      spFollowupSlaBusinessDays: 5,
+      adherenceCheckinInterval1: 30,
+      adherenceCheckinInterval2: 60,
+      adherenceCheckinInterval3: 90,
+      refillReminderLeadDays: 7
     };
     this.programSaving.set(false);
     this.programError.set(null);
@@ -267,13 +279,23 @@ export class AdminComponent implements OnInit {
     this.programSaving.set(true);
     this.programError.set(null);
 
+    const configToSend = { ...this.programConfig };
+    configToSend.adherenceCheckinIntervalsDays = [
+      this.programConfig.adherenceCheckinInterval1,
+      this.programConfig.adherenceCheckinInterval2,
+      this.programConfig.adherenceCheckinInterval3
+    ];
+    delete configToSend.adherenceCheckinInterval1;
+    delete configToSend.adherenceCheckinInterval2;
+    delete configToSend.adherenceCheckinInterval3;
+
     const body = {
       name: this.programForm.name,
       drugBrandName: this.programForm.drugBrandName,
       drugGenericName: this.programForm.drugGenericName,
       therapeuticArea: this.programForm.therapeuticArea,
       programStartDate: this.programForm.programStartDate || null,
-      config: this.programConfig
+      config: configToSend
     };
 
     this.api.createProgram(this.programForm.manufacturerId, body).subscribe({
@@ -423,6 +445,15 @@ export class AdminComponent implements OnInit {
         this.loadUserAssignments(userId);
       }
     });
+  }
+
+  toggleSource(source: string) {
+    const idx = this.programConfig.acceptedSources.indexOf(source);
+    if (idx >= 0) this.programConfig.acceptedSources.splice(idx, 1);
+    else this.programConfig.acceptedSources.push(source);
+  }
+  hasSource(source: string): boolean {
+    return this.programConfig.acceptedSources?.includes(source) ?? false;
   }
 
   // Filtered list of programs not already assigned to the expanded user

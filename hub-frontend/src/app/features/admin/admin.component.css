@@ -128,3 +128,27 @@
 .pw-cancel { background: none; border: none; cursor: pointer; font-size: 14px; color: var(--text-tertiary); padding: 2px 4px; }
 .pw-cancel:hover { color: var(--danger); }
 .pw-saved { font-size: 11px; color: var(--ok); font-weight: 600; }
+
+/* Coming Soon */
+.coming-soon-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; font-size: 13px; color: var(--text-tertiary); cursor: not-allowed; }
+.coming-soon-row input { opacity: 0.4; cursor: not-allowed; }
+.coming-soon-badge { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 6px; border-radius: var(--radius-pill); background: var(--surface-page); color: var(--text-tertiary); border: 1px solid var(--border); }
+
+/* Bool values in read view */
+.bool-val { font-weight: 600; }
+.bool-val.yes { color: var(--teal); }
+.bool-val.no { color: var(--text-tertiary); }
+
+/* Source chips */
+.source-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.source-chip { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: var(--radius-pill); background: var(--teal-light); color: var(--teal); }
+
+/* Interval inputs row */
+.interval-row { display: flex; gap: 8px; align-items: center; }
+.interval-row input { width: 60px; }
+.interval-row span { font-size: 11px; color: var(--text-tertiary); }
+
+/* Checkbox row for sources */
+.source-checkboxes { display: flex; gap: 16px; padding: 4px 0; }
+.source-check { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-primary); cursor: pointer; }
+.source-check input { width: 14px; height: 14px; accent-color: var(--teal); }
