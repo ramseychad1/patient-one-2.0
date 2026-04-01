@@ -4,17 +4,18 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
 import { CaseDetail, TimelineEntry, ActionResult, CaseTask } from '../../../core/models/case.model';
+import { ChildCasesComponent } from './child-cases/child-cases.component';
 
 const STAGES = ['INTAKE', 'CONSENT', 'BI_BV', 'PA', 'FINANCIAL', 'TRIAGE', 'ADHERENCE', 'CLOSED'];
 const STAGE_LABELS: Record<string, string> = {
-  INTAKE: 'Intake', CONSENT: 'Consent', BI_BV: 'BI / BV', PA: 'Prior Auth',
+  INTAKE: 'Intake', CONSENT: 'Consent', BI_BV: 'Benefit Investigation', PA: 'Prior Auth',
   FINANCIAL: 'Financial', TRIAGE: 'SP Triage', ADHERENCE: 'Adherence', CLOSED: 'Closed'
 };
 
 @Component({
   selector: 'app-case-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ChildCasesComponent],
   templateUrl: './case-detail.component.html',
   styleUrl: './case-detail.component.css'
 })
@@ -121,8 +122,8 @@ export class CaseDetailComponent implements OnInit {
     const plan = c.insurancePlan?.planName || 'the payer';
     switch (action) {
       case 'SEND_CONSENT_SMS': return 'Send HIPAA authorization and program consent request to patient via SMS portal link.';
-      case 'CONFIRM_CONSENT': return 'Patient has completed consent. Confirm receipt to advance to benefits investigation.';
-      case 'RUN_EBV': return 'Run electronic benefits verification to determine insurance coverage, PA requirements, and financial pathway.';
+      case 'CONFIRM_CONSENT': return 'Patient has completed consent. Confirm receipt to advance to benefit investigation.';
+      case 'RUN_EBV': return 'Run electronic benefit investigation to determine insurance coverage, PA requirements, and financial pathway.';
       case 'GENERATE_PA_PACKAGE': return `${plan} requires prior authorization for Velarix. Generate the PA cover letter and ePA form, then fax to prescriber for submission.`;
       case 'RECORD_PA_SUBMISSION': return 'Record the date PA was submitted to the payer. This starts the SLA follow-up clock.';
       case 'EVALUATE_FA': return 'Evaluate financial assistance eligibility — copay, PAP, and bridge programs based on insurance type and program configuration.';

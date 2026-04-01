@@ -158,6 +158,14 @@
         </div>
       </div>
 
+      <!-- Program Cases (Child Cases) -->
+      <app-child-cases
+        [caseId]="caseDetail()!.id"
+        [caseNumber]="caseDetail()!.caseNumber"
+        [insurancePlan]="caseDetail()!.insurancePlan"
+        [priorAuthorizations]="caseDetail()!.priorAuthorizations">
+      </app-child-cases>
+
       <!-- Insurance Card -->
       @if (caseDetail()!.insurancePlan) {
         <div class="info-card">
@@ -267,7 +275,7 @@
       <!-- Financial Assistance Card -->
       @if (caseDetail()!.financialAssistance.length > 0) {
         <div class="info-card">
-          <div class="info-card-head"><span class="info-card-title">Financial Assistance</span></div>
+          <div class="info-card-head"><span class="info-card-title">Program Cases</span></div>
           <div class="info-card-body">
             @for (fa of caseDetail()!.financialAssistance; track fa.id) {
               <div class="info-row">

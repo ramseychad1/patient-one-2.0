@@ -134,7 +134,7 @@ export class CasesListComponent implements OnInit {
   }
 
   getStageLabel(stage: string): string {
-    const map: Record<string, string> = { INTAKE: 'Intake', CONSENT: 'Consent', BI_BV: 'BI / BV', PA: 'Prior Auth', FINANCIAL: 'Financial', TRIAGE: 'SP Triage', ADHERENCE: 'Adherence', CLOSED: 'Closed' };
+    const map: Record<string, string> = { INTAKE: 'Intake', CONSENT: 'Consent', BI_BV: 'Benefit Investigation', PA: 'Prior Auth', FINANCIAL: 'Financial', TRIAGE: 'SP Triage', ADHERENCE: 'Adherence', CLOSED: 'Closed' };
     return map[stage] || stage;
   }
 }

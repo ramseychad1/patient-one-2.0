@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 
 const STAGES = ['INTAKE', 'CONSENT', 'BI_BV', 'PA', 'FINANCIAL', 'TRIAGE', 'ADHERENCE', 'CLOSED'];
 const STAGE_LABELS: Record<string, string> = {
-  INTAKE: 'Intake', CONSENT: 'Consent', BI_BV: 'BI/BV', PA: 'PA',
+  INTAKE: 'Intake', CONSENT: 'Consent', BI_BV: 'Benefit Investigation', PA: 'PA',
   FINANCIAL: 'Financial', TRIAGE: 'Triage', ADHERENCE: 'Adherence', CLOSED: 'Closed'
 };
 

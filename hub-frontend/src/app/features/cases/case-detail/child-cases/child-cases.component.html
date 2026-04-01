@@ -1,0 +1,264 @@
+@if (loading()) {
+  <div class="child-cases-section">
+    <div class="child-cases-head">
+      <span class="child-cases-title">Program Cases</span>
+      <span class="child-cases-subtitle">{{ caseNumber }}</span>
+    </div>
+    <div class="child-case-loading">Loading child cases...</div>
+  </div>
+} @else {
+  <div class="child-cases-section">
+    <div class="child-cases-head">
+      <span class="child-cases-title">Program Cases</span>
+      <span class="child-cases-subtitle">{{ caseNumber }}</span>
+      <span class="child-cases-count">{{ childCaseCount }} child cases</span>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="child-case-tabs">
+      <div class="child-case-tab"
+           [class.active]="activeTab() === 'bi'"
+           [class.active-danger]="false"
+           (click)="setTab('bi')">
+        <div class="child-case-tab-dot" [style.background]="getBiTabDotColor()"></div>
+        BI Case
+      </div>
+      <div class="child-case-tab"
+           [class.active-danger]="activeTab() === 'pa'"
+           [class.active]="false"
+           (click)="setTab('pa')">
+        <div class="child-case-tab-dot" [style.background]="getPaTabDotColor()"></div>
+        PA Case
+      </div>
+      <div class="child-case-tab"
+           [class.active]="activeTab() === 'copay'"
+           (click)="setTab('copay')">
+        <div class="child-case-tab-dot" [style.background]="getCopayTabDotColor()"></div>
+        Copay Case
+      </div>
+      <div class="child-case-tab"
+           [class.active]="activeTab() === 'pap'"
+           (click)="setTab('pap')">
+        <div class="child-case-tab-dot" [style.background]="getPapTabDotColor()"></div>
+        PAP Case
+      </div>
+    </div>
+
+    <!-- BI Case Content -->
+    @if (activeTab() === 'bi') {
+      <div class="child-case-content">
+        @if (biCases().length > 0) {
+          @for (bi of biCases(); track bi.id) {
+            <div class="cc-status-row">
+              <div class="cc-status-pill" [ngClass]="getStatusPillClass(bi.status)">
+                <div class="cc-status-pill-dot"></div>
+                {{ bi.status }}
+              </div>
+              @if (bi.reason) {
+                <div class="cc-reason">{{ bi.reason }}</div>
+              }
+              <div class="cc-case-num">{{ bi.biCaseNumber }}</div>
+            </div>
+
+            <!-- OBC Cadence -->
+            <div class="bi-cadence">
+              <div class="bi-cadence-title">Outbound Call Cadence (OBC)</div>
+              <div class="bi-attempt-row">
+                <div class="bi-attempt-num" [class.done]="bi.obcAttempt1Result">1</div>
+                <div class="bi-attempt-due">{{ formatAttemptDate(bi.obcAttempt1At) }} · Same day</div>
+                @if (bi.obcAttempt1Result) {
+                  <div class="bi-attempt-result reached">{{ bi.obcAttempt1Result }}</div>
+                } @else {
+                  <div class="bi-attempt-result pending">Pending</div>
+                }
+              </div>
+              <div class="bi-attempt-row" [style.opacity]="bi.obcAttempt2Result ? 1 : 0.4">
+                <div class="bi-attempt-num" [class.done]="bi.obcAttempt2Result">2</div>
+                <div class="bi-attempt-due">{{ bi.obcAttempt2At ? formatAttemptDate(bi.obcAttempt2At) + ' · +48 hrs' : '+48 hrs if needed' }}</div>
+                @if (bi.obcAttempt2Result) {
+                  <div class="bi-attempt-result" [ngClass]="bi.obcAttempt2Result === 'Reached' ? 'reached' : 'no-answer'">{{ bi.obcAttempt2Result }}</div>
+                } @else {
+                  <div class="bi-attempt-result pending">Not needed</div>
+                }
+              </div>
+              <div class="bi-attempt-row" [style.opacity]="bi.obcAttempt3Result ? 1 : 0.4">
+                <div class="bi-attempt-num" [class.done]="bi.obcAttempt3Result">3</div>
+                <div class="bi-attempt-due">{{ bi.obcAttempt3At ? formatAttemptDate(bi.obcAttempt3At) + ' · +48 hrs' : '+48 hrs if needed' }}</div>
+                @if (bi.obcAttempt3Result) {
+                  <div class="bi-attempt-result" [ngClass]="bi.obcAttempt3Result === 'Reached' ? 'reached' : 'no-answer'">{{ bi.obcAttempt3Result }}</div>
+                } @else {
+                  <div class="bi-attempt-result pending">Not needed</div>
+                }
+              </div>
+              <div class="bi-parallel-actions">
+                @if (bi.smsSentAt) {
+                  <div class="bi-parallel-badge">&#10003; SMS to patient sent</div>
+                }
+                @if (bi.faxToHcpSentAt) {
+                  <div class="bi-parallel-badge">&#10003; Fax to HCP sent</div>
+                }
+              </div>
+            </div>
+
+            <!-- Coverage Grid -->
+            <div class="coverage-grid">
+              <div class="coverage-cell">
+                <div class="coverage-cell-label">Plan Type</div>
+                <div class="coverage-cell-value">{{ bi.planType || '—' }}</div>
+                @if (insurancePlan?.planName) {
+                  <div class="coverage-cell-sub">{{ insurancePlan.planName }}</div>
+                }
+              </div>
+              <div class="coverage-cell">
+                <div class="coverage-cell-label">Formulary</div>
+                <div class="coverage-cell-value">{{ bi.formularyTier ? 'Tier ' + bi.formularyTier : '—' }}</div>
+                @if (bi.paRequired) {
+                  <div class="coverage-cell-sub">PA required</div>
+                }
+              </div>
+              <div class="coverage-cell">
+                <div class="coverage-cell-label">Deductible</div>
+                <div class="coverage-cell-value">{{ insurancePlan?.deductibleIndividual != null ? formatCurrency(insurancePlan.deductibleIndividual) : '—' }}</div>
+                @if (insurancePlan?.deductibleMet != null) {
+                  <div class="coverage-cell-sub">{{ formatCurrency(insurancePlan.deductibleMet) }} met</div>
+                }
+              </div>
+              <div class="coverage-cell">
+                <div class="coverage-cell-label">OOP Max</div>
+                <div class="coverage-cell-value">{{ insurancePlan?.oopMaxIndividual != null ? formatCurrency(insurancePlan.oopMaxIndividual) : '—' }}</div>
+                @if (insurancePlan?.oopMet != null) {
+                  <div class="coverage-cell-sub">{{ formatCurrency(insurancePlan.oopMet) }} met</div>
+                }
+              </div>
+            </div>
+
+            <!-- Missing Information Grid -->
+            @if (missingInfo().length > 0) {
+              <div class="mi-section-title">Missing Information (MI)</div>
+              <table class="mi-grid">
+                <thead>
+                  <tr>
+                    <th>MI #</th>
+                    <th>Category</th>
+                    <th>Detail</th>
+                    <th>Type</th>
+                    <th>Received</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (mi of missingInfo(); track mi.id) {
+                    <tr>
+                      <td class="mi-num">{{ mi.miNumber }}</td>
+                      <td>{{ mi.category }}</td>
+                      <td>{{ mi.detail }}</td>
+                      <td><span class="mi-type-pill" [ngClass]="mi.miType === 'Required' ? 'required' : 'optional'">{{ mi.miType }}</span></td>
+                      <td [ngClass]="mi.receivedDate ? 'mi-received' : 'mi-pending'">{{ mi.receivedDate ? formatDate(mi.receivedDate) : 'Pending' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          }
+        } @else {
+          <div class="cc-empty">No BI case data available.</div>
+        }
+      </div>
+    }
+
+    <!-- PA Case Content -->
+    @if (activeTab() === 'pa') {
+      <div class="child-case-content">
+        @if (priorAuthorizations.length > 0) {
+          @for (pa of priorAuthorizations; track pa.id; let first = $first) {
+            @if (first) {
+              <div class="cc-status-row">
+                <div class="cc-status-pill" [ngClass]="getPaStatusPillClass()">
+                  <div class="cc-status-pill-dot"></div>
+                  {{ pa.status === 'SUBMITTED' || pa.status === 'PENDING' ? 'In Progress' : pa.status }}
+                </div>
+                <div class="cc-reason">{{ pa.status === 'PENDING' || pa.status === 'SUBMITTED' ? 'PA SLA Breached' : pa.denialReason || pa.status }}</div>
+                <div class="cc-case-num">PA-{{ caseNumber.replace('HC-', '') }}-0{{ pa.attemptNumber }}</div>
+              </div>
+              <div class="pap-fields">
+                <div class="pap-row"><span class="pap-key">PA Type</span><span class="pap-val">{{ pa.paType }}</span></div>
+                <div class="pap-row"><span class="pap-key">Payer</span><span class="pap-val">{{ pa.payerName || '—' }}</span></div>
+                <div class="pap-row"><span class="pap-key">Submit SLA</span><span class="pap-val" [class.warn]="true">{{ pa.submittedAt ? formatDate(pa.submittedAt) : 'Not yet submitted' }}</span></div>
+                <div class="pap-row"><span class="pap-key">Auth #</span><span class="pap-val" [style.color]="pa.authorizationNumber ? '' : 'var(--text-tertiary)'" [style.font-style]="pa.authorizationNumber ? '' : 'italic'">{{ pa.authorizationNumber || 'Pending decision' }}</span></div>
+                <div class="pap-row"><span class="pap-key">Appeal window</span><span class="pap-val">30 days from denial</span></div>
+              </div>
+            }
+          }
+        } @else {
+          <div class="cc-empty">No PA data available.</div>
+        }
+      </div>
+    }
+
+    <!-- Copay Case Content -->
+    @if (activeTab() === 'copay') {
+      <div class="child-case-content">
+        @if (copayCases().length > 0) {
+          @for (copay of copayCases(); track copay.id) {
+            <div class="cc-status-row">
+              <div class="cc-status-pill" [ngClass]="getStatusPillClass(copay.status)">
+                <div class="cc-status-pill-dot"></div>
+                {{ copay.status }}
+              </div>
+              @if (copay.reason) {
+                <div class="cc-reason">{{ copay.reason === 'WaitingPAResolution' ? 'Waiting PA Resolution' : copay.reason }}</div>
+              }
+              <div class="cc-case-num">{{ copay.copayCaseNumber }}</div>
+            </div>
+            <div class="pap-fields">
+              <div class="pap-row"><span class="pap-key">Eligibility</span><span class="pap-val highlight">{{ copay.aksCheckPassed ? 'Eligible — Commercial' : 'Ineligible' }}</span></div>
+              <div class="pap-row"><span class="pap-key">AKS check</span><span class="pap-val" [class.highlight]="copay.aksCheckPassed" [class.warn]="!copay.aksCheckPassed">{{ copay.aksCheckPassed ? 'Passed — no govt coverage' : copay.aksBlockReason || 'Failed' }}</span></div>
+              <div class="pap-row"><span class="pap-key">Max benefit</span><span class="pap-val">{{ copay.maxBenefitUsd != null ? formatCurrency(copay.maxBenefitUsd) + ' / year' : '—' }}</span></div>
+              <div class="pap-row"><span class="pap-key">Card #</span><span class="pap-val" [style.color]="copay.cardNumber ? '' : 'var(--text-tertiary)'" [style.font-style]="copay.cardNumber ? '' : 'italic'">{{ copay.cardNumber || 'Not yet issued' }}</span></div>
+              <div class="pap-row"><span class="pap-key">BIN / PCN</span><span class="pap-val" [style.color]="copay.bin ? '' : 'var(--text-tertiary)'" [style.font-style]="copay.bin ? '' : 'italic'">{{ copay.bin ? copay.bin + ' / ' + copay.pcn : 'Pending activation' }}</span></div>
+              <div class="pap-row"><span class="pap-key">Used YTD</span><span class="pap-val">{{ formatCurrency(copay.usedYtdUsd) }}</span></div>
+            </div>
+          }
+        } @else {
+          <div class="cc-empty">No copay case data available.</div>
+        }
+      </div>
+    }
+
+    <!-- PAP Case Content -->
+    @if (activeTab() === 'pap') {
+      <div class="child-case-content">
+        @if (papCases().length > 0) {
+          @for (pap of papCases(); track pap.id) {
+            <div class="cc-status-row">
+              <div class="cc-status-pill" [ngClass]="pap.status === 'Cancelled' ? 'neutral' : getStatusPillClass(pap.status)">
+                <div class="cc-status-pill-dot"></div>
+                {{ pap.status === 'Cancelled' && pap.reason === 'NotApplicable' ? 'Not Applicable' : pap.status }}
+              </div>
+              <div class="cc-reason">{{ pap.status === 'Cancelled' ? 'Commercial Insurance' : pap.reason }}</div>
+              <div class="cc-case-num">{{ pap.papCaseNumber || '—' }}</div>
+            </div>
+            @if (pap.status === 'Cancelled' && pap.ineligibleReason) {
+              <div class="pap-na-explanation">
+                PAP is not applicable for this patient. {{ pap.ineligibleReason }}.<br><br>
+                PAP eligibility requires: uninsured or underinsured status with household income ≤500% FPL.<br><br>
+                <span class="pap-na-footnote">If coverage status changes, PAP evaluation can be initiated from the Financial stage.</span>
+              </div>
+            } @else {
+              <div class="pap-fields">
+                <div class="pap-row"><span class="pap-key">FPL %</span><span class="pap-val">{{ pap.fplPercentage || '—' }}%</span></div>
+                <div class="pap-row"><span class="pap-key">Household</span><span class="pap-val">{{ pap.householdSize || '—' }}</span></div>
+                <div class="pap-row"><span class="pap-key">Income</span><span class="pap-val">{{ pap.annualIncomeUsd != null ? formatCurrency(pap.annualIncomeUsd) : '—' }}</span></div>
+                <div class="pap-row"><span class="pap-key">Verification</span><span class="pap-val">{{ pap.incomeVerifiedMethod || '—' }}</span></div>
+                @if (pap.approvalEffectiveDate) {
+                  <div class="pap-row"><span class="pap-key">Effective</span><span class="pap-val">{{ formatDate(pap.approvalEffectiveDate) }} — {{ formatDate(pap.approvalExpiryDate) }}</span></div>
+                }
+              </div>
+            }
+          }
+        } @else {
+          <div class="cc-empty">No PAP case data available.</div>
+        }
+      </div>
+    }
+  </div>
+}
