@@ -41,7 +41,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         UUID userId = jwtService.getUserId(token);
         String email = jwtService.getEmail(token);
         List<String> roles = jwtService.getRoles(token);
-        UUID activeProgramId = jwtService.getActiveProgramId(token);
+        UUID activeProgramId;
+        try {
+            activeProgramId = jwtService.getActiveProgramId(token);
+        } catch (Exception e) {
+            activeProgramId = null;
+        }
 
         List<SimpleGrantedAuthority> authorities = roles.stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))

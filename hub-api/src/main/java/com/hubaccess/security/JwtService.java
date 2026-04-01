@@ -102,7 +102,14 @@ public class JwtService {
 
     public UUID getActiveProgramId(String token) {
         String val = parseToken(token).get("activeProgramId", String.class);
-        return val != null ? UUID.fromString(val) : null;
+        if (val == null || val.isBlank()) {
+            return null;
+        }
+        try {
+            return UUID.fromString(val);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     public boolean isRefreshToken(String token) {
