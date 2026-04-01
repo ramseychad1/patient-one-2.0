@@ -40,10 +40,17 @@ export class EnrollmentLauncherComponent implements OnInit {
   // eRX simulated fields
   erx = {
     transactionId: 'SS-2026-' + Math.floor(Math.random() * 99999).toString().padStart(5, '0'),
-    patientFirst: 'New', patientLast: 'Patient', dob: '1980-01-15', phone: '614-555-0100',
+    patientFirst: 'Demo', patientLast: '', dob: '1980-01-15', phone: '614-555-0100',
     npi: '1234567890', prescriberFirst: 'Tran', prescriberLast: 'Nguyen',
     drug: '', ndcCode: '12345-678-90'
   };
+
+  private nextDemoSuffix(): string {
+    const key = 'ha_demo_patient_seq';
+    const seq = parseInt(localStorage.getItem(key) || '0', 10) + 1;
+    localStorage.setItem(key, seq.toString());
+    return seq.toString().padStart(4, '0');
+  }
 
   ngOnInit() {
     this.api.getMyPrograms().subscribe({
@@ -88,10 +95,11 @@ export class EnrollmentLauncherComponent implements OnInit {
 
   submitErx() {
     this.submitting.set(true);
+    const suffix = this.nextDemoSuffix();
     const body = {
       enrollmentSource: 'ERX',
       programId: this.activeProgramId,
-      patient: { firstName: this.erx.patientFirst, lastName: this.erx.patientLast, dob: this.erx.dob, phone: this.erx.phone, preferredContactMethod: 'PHONE' },
+      patient: { firstName: this.erx.patientFirst, lastName: 'Patient' + suffix, dob: this.erx.dob, phone: this.erx.phone, preferredContactMethod: 'PHONE' },
       prescriber: { npi: this.erx.npi, firstName: this.erx.prescriberFirst, lastName: this.erx.prescriberLast },
       drug: { ndcCode: this.erx.ndcCode, brandName: this.activeDrugBrand },
       insurance: {},
@@ -106,7 +114,7 @@ export class EnrollmentLauncherComponent implements OnInit {
     const body = {
       enrollmentSource: 'FAX_PDF',
       programId: this.activeProgramId,
-      patient: { firstName: 'Fax', lastName: 'Patient', dob: '1975-06-20', phone: '614-555-0300', preferredContactMethod: 'PHONE' },
+      patient: { firstName: 'Fax', lastName: 'Patient' + this.nextDemoSuffix(), dob: '1975-06-20', phone: '614-555-0300', preferredContactMethod: 'PHONE' },
       prescriber: { npi: '1234567890' },
       drug: { ndcCode: '12345-678-90', brandName: this.activeDrugBrand },
       insurance: {},
