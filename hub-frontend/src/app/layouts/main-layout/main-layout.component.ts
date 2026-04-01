@@ -54,12 +54,39 @@ export class MainLayoutComponent implements OnInit {
     this.api.getMyPrograms().subscribe({
       next: (programs) => {
         this.myPrograms.set(programs);
-        // Restore active program from localStorage, or default to first
         const savedId = localStorage.getItem('ha_active_program_id');
         const match = savedId ? programs.find((p: any) => p.id === savedId) : null;
-        this.activeProgram.set(match || programs[0] || null);
+        const active = match || programs[0] || null;
+        this.activeProgram.set(active);
+
+        // Ensure the JWT has the activeProgramId claim.
+        // After login the JWT won't include it, so re-set it and reload once
+        // so the dashboard fetches program-scoped data.
+        if (active && !this.jwtHasActiveProgram(active.id)) {
+          this.api.setActiveProgram(active.id).subscribe({
+            next: (res) => {
+              if (res.accessToken) {
+                localStorage.setItem('ha_access_token', res.accessToken);
+              }
+              localStorage.setItem('ha_active_program_id', active.id);
+              // Reload so all components use the updated JWT
+              window.location.reload();
+            }
+          });
+        }
       }
     });
+  }
+
+  private jwtHasActiveProgram(expectedId: string): boolean {
+    const token = localStorage.getItem('ha_access_token');
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.activeProgramId === expectedId;
+    } catch {
+      return false;
+    }
   }
 
   switchProgram(program: any) {
