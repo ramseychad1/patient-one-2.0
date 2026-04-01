@@ -1,10 +1,11 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { ApiResponse, CaseDetail } from '../../core/models/case.model';
+import { ApiService } from '../../core/services/api.service';
 
 @Component({
   selector: 'app-enrollment-launcher',
@@ -13,20 +14,27 @@ import { ApiResponse, CaseDetail } from '../../core/models/case.model';
   templateUrl: './enrollment-launcher.component.html',
   styleUrl: './enrollment-launcher.component.css'
 })
-export class EnrollmentLauncherComponent {
+export class EnrollmentLauncherComponent implements OnInit {
   private router = inject(Router);
   private http = inject(HttpClient);
+  private api = inject(ApiService);
 
   activeModal = signal<string | null>(null);
   submitting = signal(false);
   aksWarning = signal(false);
+
+  // Active program context
+  activeProgramId = '';
+  activeDrugBrand = '';
+  activeDrugGeneric = '';
+  activeProgramName = '';
 
   // DEP form fields
   dep = {
     firstName: '', lastName: '', dob: '', phone: '', preferredContactMethod: 'PHONE',
     npi: '', prescriberFirst: '', prescriberLast: '', practiceName: '', prescriberPhone: '', prescriberFax: '',
     insuranceType: 'COMMERCIAL', planName: '', memberId: '', groupNumber: '',
-    ndcCode: '12345-678-90', brandName: 'Velarix', diagnosisCode: ''
+    ndcCode: '12345-678-90', brandName: '', diagnosisCode: ''
   };
 
   // eRX simulated fields
@@ -34,8 +42,27 @@ export class EnrollmentLauncherComponent {
     transactionId: 'SS-2026-' + Math.floor(Math.random() * 99999).toString().padStart(5, '0'),
     patientFirst: 'New', patientLast: 'Patient', dob: '1980-01-15', phone: '614-555-0100',
     npi: '1234567890', prescriberFirst: 'Tran', prescriberLast: 'Nguyen',
-    drug: 'Velarix (velarixumab)', ndcCode: '12345-678-90'
+    drug: '', ndcCode: '12345-678-90'
   };
+
+  ngOnInit() {
+    this.api.getMyPrograms().subscribe({
+      next: (programs) => {
+        const savedId = localStorage.getItem('ha_active_program_id');
+        const active = savedId ? programs.find((p: any) => p.id === savedId) : programs[0];
+        if (active) {
+          this.activeProgramId = active.id;
+          this.activeDrugBrand = active.drugBrandName || active.name;
+          this.activeDrugGeneric = active.drugGenericName || '';
+          this.activeProgramName = active.name;
+          this.dep.brandName = this.activeDrugBrand;
+          this.erx.drug = this.activeDrugGeneric
+            ? `${this.activeDrugBrand} (${this.activeDrugGeneric})`
+            : this.activeDrugBrand;
+        }
+      }
+    });
+  }
 
   openModal(source: string) { this.activeModal.set(source); }
   closeModal() { this.activeModal.set(null); this.aksWarning.set(false); }
@@ -49,7 +76,7 @@ export class EnrollmentLauncherComponent {
     this.submitting.set(true);
     const body = {
       enrollmentSource: 'PORTAL',
-      programId: '22222222-2222-2222-2222-222222222222',
+      programId: this.activeProgramId,
       patient: { firstName: this.dep.firstName, lastName: this.dep.lastName, dob: this.dep.dob, phone: this.dep.phone, preferredContactMethod: this.dep.preferredContactMethod },
       prescriber: { npi: this.dep.npi || '1234567890', firstName: this.dep.prescriberFirst, lastName: this.dep.prescriberLast, practiceName: this.dep.practiceName, phone: this.dep.prescriberPhone, fax: this.dep.prescriberFax },
       drug: { ndcCode: this.dep.ndcCode, brandName: this.dep.brandName, diagnosisCode: this.dep.diagnosisCode },
@@ -63,10 +90,10 @@ export class EnrollmentLauncherComponent {
     this.submitting.set(true);
     const body = {
       enrollmentSource: 'ERX',
-      programId: '22222222-2222-2222-2222-222222222222',
+      programId: this.activeProgramId,
       patient: { firstName: this.erx.patientFirst, lastName: this.erx.patientLast, dob: this.erx.dob, phone: this.erx.phone, preferredContactMethod: 'PHONE' },
       prescriber: { npi: this.erx.npi, firstName: this.erx.prescriberFirst, lastName: this.erx.prescriberLast },
-      drug: { ndcCode: this.erx.ndcCode, brandName: 'Velarix' },
+      drug: { ndcCode: this.erx.ndcCode, brandName: this.activeDrugBrand },
       insurance: {},
       miFlags: ['insurance_member_id', 'diagnosis_code'],
       erxTransactionId: this.erx.transactionId
@@ -78,10 +105,10 @@ export class EnrollmentLauncherComponent {
     this.submitting.set(true);
     const body = {
       enrollmentSource: 'FAX_PDF',
-      programId: '22222222-2222-2222-2222-222222222222',
+      programId: this.activeProgramId,
       patient: { firstName: 'Fax', lastName: 'Patient', dob: '1975-06-20', phone: '614-555-0300', preferredContactMethod: 'PHONE' },
       prescriber: { npi: '1234567890' },
-      drug: { ndcCode: '12345-678-90', brandName: 'Velarix' },
+      drug: { ndcCode: '12345-678-90', brandName: this.activeDrugBrand },
       insurance: {},
       miFlags: ['insurance_member_id', 'group_number', 'diagnosis_code']
     };
