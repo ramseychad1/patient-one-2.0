@@ -40,7 +40,7 @@ export class EnrollmentLauncherComponent implements OnInit {
   // eRX simulated fields
   erx = {
     transactionId: 'SS-2026-' + Math.floor(Math.random() * 99999).toString().padStart(5, '0'),
-    patientFirst: 'Demo', patientLast: '', dob: '1980-01-15', phone: '614-555-0100',
+    patientFirst: 'eRX', patientLast: '', dob: '1980-01-15', phone: '614-555-0100',
     npi: '1234567890', prescriberFirst: 'Tran', prescriberLast: 'Nguyen',
     drug: '', ndcCode: '12345-678-90'
   };
@@ -81,10 +81,12 @@ export class EnrollmentLauncherComponent implements OnInit {
 
   submitDep() {
     this.submitting.set(true);
+    const firstName = this.dep.firstName || 'DEP';
+    const lastName = this.dep.lastName || ('Patient' + this.nextDemoSuffix());
     const body = {
       enrollmentSource: 'PORTAL',
       programId: this.activeProgramId,
-      patient: { firstName: this.dep.firstName, lastName: this.dep.lastName, dob: this.dep.dob, phone: this.dep.phone, preferredContactMethod: this.dep.preferredContactMethod },
+      patient: { firstName, lastName, dob: this.dep.dob, phone: this.dep.phone, preferredContactMethod: this.dep.preferredContactMethod },
       prescriber: { npi: this.dep.npi || '1234567890', firstName: this.dep.prescriberFirst, lastName: this.dep.prescriberLast, practiceName: this.dep.practiceName, phone: this.dep.prescriberPhone, fax: this.dep.prescriberFax },
       drug: { ndcCode: this.dep.ndcCode, brandName: this.dep.brandName, diagnosisCode: this.dep.diagnosisCode },
       insurance: { insuranceType: this.dep.insuranceType, planName: this.dep.planName, memberId: this.dep.memberId, groupNumber: this.dep.groupNumber },
